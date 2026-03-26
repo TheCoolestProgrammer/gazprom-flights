@@ -5,6 +5,7 @@ from src.database import create_db_and_tables, SessionDep
 from contextlib import asynccontextmanager
 from src.routes import auth
 from src.dependencies import get_current_user
+from src.models import department, flight, passenger_flight, passenger, user
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
