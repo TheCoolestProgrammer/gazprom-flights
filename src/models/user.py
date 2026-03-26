@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Enum
+from sqlalchemy.orm import relationship
 
 from src.database import Base
 
@@ -24,3 +25,4 @@ class User(Base):
     email = Column(String(255), unique=True)
 
     role = Column(Enum(Role), nullable=False, default=Role.DISPATCHER)
+    passengers = relationship("Passenger",back_populates="users")

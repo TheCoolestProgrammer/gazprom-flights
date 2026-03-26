@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Новая заявка | Система Газпром{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <h2 style="color: var(--gz-dark); margin-bottom: 1.5rem; border-bottom: 2px solid var(--gz-blue); padding-bottom: 0.5rem;">
+        Создание заявки на перевозку
+    </h2>
+
+    <form action="/transport_dispatcher/edit/{{passenger.id}}" method="post" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        
+        <!-- ФИО -->
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">ФИО сотрудника</label>
+            <input type="text" name="fullname" required placeholder="Иванов Иван Иванович" 
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"
+                   value="{{passenger.trip_purpose}}">
+        </div>
+
+        <!-- Паспорт -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">Серия и номер паспорта</label>
+            <input type="number" name="passport" required placeholder="1234567890" value="{{passenger.passport}}"
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+        <!-- Департамент -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">Департамент</label>
+            <select name="department_id" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="{{passenger.department_id}}"  selected>{{passenger.departments.name}}</option>
+                {% for dept in departments %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Дата рождения -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">Дата рождения</label>
+            <input type="date" name="birthdate" required value = {{passenger.birthdate}}
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+        <!-- Пол -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">Пол</label>
+            <select name="gender" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="male">Мужской</option>
+                <option value="female">Женский</option>
+            </select>
+        </div>
+
+        <!-- Цель поездки -->
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">Цель поездки</label>
+            <textarea name="trip_purpose" required rows="3" placeholder="Укажите причину командировки или перевозки"
+                      style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; resize: vertical;"
+                      >{{passenger.trip_purpose}}</textarea>
+        </div>
+
+        <!-- Кнопки -->
+        <div style="grid-column: span 2; display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1; font-weight: bold;">
+                ОТПРАВИТЬ ЗАЯВКУ
+            </button>
+            <a href="/transport_dispatcher/" class="btn" style="background: #ccc; color: #333; text-align: center; line-height: 24px;">Отмена</a>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

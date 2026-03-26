@@ -5,7 +5,7 @@ from src.database import SessionDep
 from src.models.user import User
 from src.security import verify_token
 
-async def get_current_user(request: Request, session: SessionDep):
+async def get_current_user(request: Request, session: SessionDep) -> User:
     # Достаем куку
     token_cookie = request.cookies.get("access_token")
     
@@ -34,3 +34,12 @@ async def get_current_user(request: Request, session: SessionDep):
         raise HTTPException(status_code=404, detail="Пользователь не найден")
         
     return user
+
+class RoleChecker:
+    def __init__(self, allowed_role: str):
+        self.allowed_role = allowed_role
+
+    def __call__(self, user: User = Depends(get_current_user)):
+        if user.role != self.allowed_role:
+            raise HTTPException(status_code=403)
+        return user
