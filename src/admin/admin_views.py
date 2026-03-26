@@ -35,7 +35,19 @@ class PassengerAdmin(ModelView, model=Passenger):
         # Passenger.department_id
         "departments"
     ]
+    # Добавляем фильтры (появятся справа в интерфейсе)
+    # column_filters = [
+    #     # "departments.name", # Фильтр по названию департамента
+    #     Passenger.gender,
+    #     Passenger.trip_purpose,
+    #     Passenger.request_date
+    # ]
 
+    # Поиск по текстовым полям
+    column_searchable_list = [
+        Passenger.fullname, 
+        Passenger.passport
+    ]
     # Поля в форме создания/редактирования
     form_columns = [
         Passenger.fullname,
