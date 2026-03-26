@@ -9,6 +9,7 @@ class UserRegister(BaseModel):
     login: str
     password: str
     name: str
+    department_id:int
 
 
 class Token(BaseModel):

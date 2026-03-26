@@ -4,7 +4,6 @@ from passlib.context import CryptContext
 from typing import Any, Optional
 from src.config import config
 
-# Явно указываем использование bcrypt_sha256
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
@@ -70,13 +69,3 @@ def create_tokens(user_id: int, login: str) -> dict[str, str]:
     }
 
 
-def create_LDAP_tokens(email: str, login: str) -> dict[str, str]:
-    """Создает пару access и refresh токенов"""
-    access_token = create_access_token(data={"email": email, "login": login})
-    refresh_token = create_refresh_token(data={"email": email, "login": login})
-
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer",
-    }

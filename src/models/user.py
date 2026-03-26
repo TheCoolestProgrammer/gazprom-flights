@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum
+from sqlalchemy import Column, Integer, String, Enum, ForeignKey
 from sqlalchemy.orm import relationship
 
 from src.database import Base
@@ -23,6 +23,8 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     name = Column(String(100), nullable=False)
     email = Column(String(255), unique=True)
+    department_id = Column(Integer,ForeignKey("departments.id"))
 
     role = Column(Enum(Role), nullable=False, default=Role.DISPATCHER)
     passengers = relationship("Passenger",back_populates="users")
+    departments = relationship("Department",back_populates="users")

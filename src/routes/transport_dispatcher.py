@@ -17,9 +17,7 @@ async def dashboard(
     session: SessionDep,
     user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
     ):
-    
-    # Получаем все заявки
-    requests = session.query(Passenger).order_by(Passenger.request_date.desc()).all()
+    requests = session.query(Passenger).filter(Passenger.created_by==user.id).order_by(Passenger.request_date.desc()).all()
     return templates.TemplateResponse(request=request, name="transport_dispatcher/dashboard.html", context={
         "user": user,
         "requests": requests

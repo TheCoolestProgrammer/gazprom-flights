@@ -11,5 +11,7 @@ class Department(Base):
     phone = Column(BigInteger, nullable=False)
 
     passengers = relationship("Passenger",back_populates='departments')
+    users = relationship("User",back_populates="departments")
+    
     def __str__(self):
         return self.name

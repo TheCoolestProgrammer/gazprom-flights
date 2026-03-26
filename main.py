@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from src.database import create_db_and_tables, engine
 from contextlib import asynccontextmanager
-from src.routes import auth, transport_dispatcher
+from src.routes import auth, transport_dispatcher, department_director
 from src.dependencies import get_current_user
 from src.models import department, flight, passenger_flight, passenger, user
 from sqladmin import Admin
@@ -23,6 +23,7 @@ templates = Jinja2Templates(directory="templates")
 app = FastAPI(title="gazprom kruto", lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(transport_dispatcher.router)
+app.include_router(department_director.router)
 # Инициализация админки
 admin = Admin(
     app, 

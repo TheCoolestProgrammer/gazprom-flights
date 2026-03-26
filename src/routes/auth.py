@@ -58,6 +58,7 @@ def register(user_data: UserRegister, session: SessionDep):
         login=user_data.login,
         password_hash=hashed_password,
         name=user_data.name,
+        department_id=user_data.department_id
     )
 
     session.add(user)
