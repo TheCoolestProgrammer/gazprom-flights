@@ -10,5 +10,5 @@ class PassengerFlight(Base):
     flight_id = Column(Integer, ForeignKey("flights.id"))
     passenger_id = Column(Integer, ForeignKey("passengers.id"))
     
-    flights = relationship("flights",back_populates='passenger_flight')
-    passengers = relationship("passengers",back_populates='passenger_flight')
+    flights = relationship("Flight",back_populates='passenger_flights')
+    passengers = relationship("Passenger",back_populates='passenger_flights')

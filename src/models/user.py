@@ -23,4 +23,4 @@ class User(Base):
     name = Column(String(100), nullable=False)
     email = Column(String(255), unique=True)
 
-    role = Column(Enum(Role), nullable=False)
+    role = Column(Enum(Role), nullable=False, default=Role.DISPATCHER)

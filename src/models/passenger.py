@@ -28,5 +28,7 @@ class Passenger(Base):
     request_date = Column(Date, default=datetime.datetime.now)
     fact_date = Column(Date)
     
-    departments = relationship("departments", back_populates="passengers")
-    passenger_flights = relationship("passenger_flight",back_populates='passenges')
+    departments = relationship("Department", back_populates="passengers")
+    passenger_flights = relationship("PassengerFlight",back_populates='passengers')
+    def __str__(self):
+        return self.fullname
