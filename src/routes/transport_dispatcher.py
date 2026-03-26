@@ -29,7 +29,7 @@ async def dashboard(
 async def create_form(
     request: Request,
     session: SessionDep, 
-    user: User = Depends(get_current_user) 
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER)) 
     ):
     departments = session.query(Department).all()
     return templates.TemplateResponse(request=request, name="transport_dispatcher/create.html", context={
@@ -47,7 +47,7 @@ async def create_request(
     birthdate: str = Form(...),
     gender: Gender = Form(...),
     trip_purpose: str = Form(...),
-    user: User = Depends(get_current_user)
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
 ):
     new_passenger = Passenger(
         fullname=fullname,
@@ -69,7 +69,7 @@ async def edit_form(
     request: Request,
     passenger_id:int,
     session: SessionDep, 
-    user: User = Depends(get_current_user) 
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
     ):
     passenger = session.query(Passenger).filter(Passenger.id==passenger_id).first()
     departments = session.query(Department).all()
@@ -90,7 +90,7 @@ async def edit_request(
     birthdate: str = Form(...),
     gender: Gender = Form(...),
     trip_purpose: str = Form(...),
-    user: User = Depends(get_current_user)
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
 ):
     passenger = session.get(Passenger, passenger_id)
     
@@ -111,7 +111,7 @@ async def edit_request(
 async def delete_passenger(
     passenger_id: int, 
     session: SessionDep,
-    user: User = Depends(get_current_user) 
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
 ):
     passenger = session.get(Passenger, passenger_id)
     
