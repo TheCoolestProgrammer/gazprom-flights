@@ -11,5 +11,6 @@ class FlightRoute(Base):
     aircraft_type = Column(String(100), nullable=False)
     
     flights= relationship("Flight", back_populates="flight_routes")
+    passengers = relationship("Passenger",back_populates="flight_routes")
     def __str__(self):
         return self.route

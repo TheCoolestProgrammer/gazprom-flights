@@ -10,10 +10,13 @@
         <thead>
             <tr>
                 <th>Дата заявки</th>
-                <th>факт.дата</th>
+                <th>желаемая дата</th>
                 <th>ФИО</th>
+                <th>дата рождения</th>
                 <th>Паспорт</th>
+                <th>вес багажа</th>
                 <th>Цель</th>
+                <th>дополнительно</th>
                 <th>Статус</th>
                 <th>Действия</th>
             </tr>
@@ -22,10 +25,13 @@
             {% for req in requests %}
             <tr>
                 <td>{{ req.request_date }}</td>
-                <td>{{ req.fact_date }}</td>
+                <td>{{ req.planning_date }}</td>
                 <td>{{ req.fullname }}</td>
+                <td>{{ req.planning_date }}</td>
                 <td>{{ req.passport }}</td>
+                <td>{{ req.cargo_weight }}</td>
                 <td>{{ req.trip_purpose[:30] }}...</td>
+                <td>{{ req.notes }}</td>
                 <td>
                     <span class="status-{{ req.status.name.lower() }}">
                         {{ req.status.value }}

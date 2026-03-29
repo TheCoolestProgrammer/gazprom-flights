@@ -15,7 +15,7 @@ from src.admin.admin_views import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_db_and_tables()
+    # create_db_and_tables()
     yield
 
 templates = Jinja2Templates(directory="templates")

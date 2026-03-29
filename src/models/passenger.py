@@ -26,18 +26,19 @@ class Passenger(Base):
     gender = Column(Enum(Gender), nullable=False)
     passport = Column(BigInteger, nullable=False)
     department_id = Column(Integer, ForeignKey("departments.id"))
+    flight_route_id = Column(Integer, ForeignKey("flight_routes.id"))
 
     trip_purpose = Column(Text, nullable=False)
     cargo_weight = Column(Float)
     notes = Column(Text)
     request_date = Column(Date, default=datetime.datetime.now)
-    fact_date = Column(Date)
+    planning_date = Column(Date)
     status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
     created_by = Column(Integer, ForeignKey("users.id"))
 
     departments = relationship("Department", back_populates="passengers")
     passenger_flights = relationship("PassengerFlight",back_populates='passengers')
     users = relationship("User",back_populates="passengers")
-
+    flight_routes = relationship("FlightRoute",back_populates="passengers")
     def __str__(self):
         return self.fullname

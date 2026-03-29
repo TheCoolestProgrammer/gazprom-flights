@@ -71,7 +71,8 @@ class PassengerAdmin(ModelView, model=Passenger):
         Passenger.trip_purpose,
         Passenger.cargo_weight,
         Passenger.notes,
-        Passenger.fact_date
+        Passenger.planning_date,
+        "flight_routes"
     ]
     
     icon = "fa-solid fa-person-walking-luggage"
