@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from src.database import create_db_and_tables, engine
 from contextlib import asynccontextmanager
-from src.routes import auth, transport_dispatcher, department_director
+from src.routes import auth, transport_dispatcher, department_director, dispatcher
 from src.dependencies import get_current_user
 from src.models import department, flight, passenger_flight, passenger, user
 from sqladmin import Admin
@@ -24,6 +24,7 @@ app = FastAPI(title="gazprom kruto", lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(transport_dispatcher.router)
 app.include_router(department_director.router)
+app.include_router(dispatcher.router)
 # Инициализация админки
 admin = Admin(
     app, 
@@ -70,7 +71,7 @@ def health_check():
 @app.get("/")
 def home(request: Request, userdb = Depends(get_current_user)):
     redirection_table = user.Role.REDIRECTION_TABLE()
-    if redirection_table[userdb.role]:
+    if userdb.role in redirection_table:
         return RedirectResponse(redirection_table[userdb.role])
     else:
         raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)

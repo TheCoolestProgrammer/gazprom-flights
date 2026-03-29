@@ -20,7 +20,8 @@ class Role(enum.Enum):
         return {
             Role.ADMIN: "/admin",
             Role.DEPARTMENT_DEIRECTOR:"/department_director",
-            Role.TRANSPORT_DISPATHER:"/transport_dispatcher"
+            Role.TRANSPORT_DISPATHER:"/transport_dispatcher",
+            Role.DISPATCHER:"/dispatcher"
         }
 
     

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>все заявки на перевозку</h2>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Дата заявки</th>
+                <th>факт.дата</th>
+                <th>ФИО</th>
+                <th>Паспорт</th>
+                <th>Цель</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for req in requests %}
+            <tr>
+                <td>{{ req.request_date }}</td>
+                <td>{{ req.fact_date }}</td>
+                <td>{{ req.fullname }}</td>
+                <td>{{ req.passport }}</td>
+                <td>{{ req.trip_purpose[:30] }}...</td>
+                <td>
+                    <span class="status-{{ req.status.name.lower() }}">
+                        {{ req.status.value }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
