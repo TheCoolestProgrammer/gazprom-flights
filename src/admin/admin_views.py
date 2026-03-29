@@ -1,7 +1,8 @@
 from sqladmin import ModelView
 from src.models.user import User, Role
 from src.models.department import Department
-from src.models.flight import Flight
+from src.models.flight_route import FlightRoute
+from src.models.flights import Flight
 from src.models.passenger import Passenger
 from src.models.passenger_flight import PassengerFlight
 
@@ -19,12 +20,23 @@ class DepartmentAdmin(ModelView, model=Department):
     name = "филиал"
     name_plural = "филиалы"
 
-class FlightAdmin(ModelView, model=Flight):
-    column_list = [Flight.id, Flight.route, Flight.aircraft_type]
-    form_excluded_columns = ["passengers", "passenger_flights"]
+class FlightRoutesAdmin(ModelView, model=FlightRoute):
+    column_list = [FlightRoute.id, FlightRoute.route, FlightRoute.aircraft_type]
+    form_excluded_columns = ["flights"]
     icon = "fa-solid fa-plane"
-    name = "Рейс"
-    name_plural = "Рейсы"
+    name = "маршрут"
+    name_plural = "маршруты"
+
+class FlightsAdmin(ModelView, model=Flight):
+    column_list = [
+        Flight.id, 
+        "flight_routes", 
+        Flight.flight_date
+        ]
+    form_excluded_columns = ["passenger_flights"]
+    icon = "fa-solid fa-plane"
+    name = "перелет"
+    name_plural = "перелеты"
 
 class PassengerAdmin(ModelView, model=Passenger):
     # Колонки в таблице
@@ -71,6 +83,7 @@ class PassengerFlightAdmin(ModelView, model=PassengerFlight):
         PassengerFlight.id,
         # PassengerFlight.flight_id,
         "flights",
+        PassengerFlight.place,
         # PassengerFlight.passenger_id
         "passengers"
         ]

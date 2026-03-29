@@ -3,13 +3,13 @@ from sqlalchemy.orm import relationship
 from src.database import Base
 
     
-class Flight(Base):
-    __tablename__ = "flights"
+class FlightRoute(Base):
+    __tablename__ = "flight_routes"
 
     id = Column(Integer, primary_key=True, index=True)
     route = Column(String(100), nullable=False)
     aircraft_type = Column(String(100), nullable=False)
     
-    passenger_flights = relationship("PassengerFlight",back_populates='flights')
+    flights= relationship("Flight", back_populates="flight_routes")
     def __str__(self):
         return self.route
