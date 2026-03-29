@@ -37,6 +37,40 @@
                         {{ req.status.value }}
                     </span>
                 </td>
+                <td><a href="create/{{req.id}}">посадить на борт</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>перелеты и пассажиры</h2>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>дата</th>
+                <th>маршрут</th>
+                <th>пассажир</th>
+                <th>Паспорт</th>
+                <th>вес багажа</th>
+                <th>место</th>
+                <th>id перелета</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for flight in flights %}
+            <tr>
+                <td>{{ flight.flights.flight_date }}</td>
+                <td>{{ flight.flights.flight_routes.route}}</td>
+                <td>{{ flight.passengers.fullname }}</td>
+                <td>{{ flight.passengers.passport }}</td>
+                <td>{{ flight.passengers.cargo_weight }}</td>
+                <td>{{ flight.place }}</td>
+                <td>{{ flight.flight_id }}</td>
             </tr>
             {% endfor %}
         </tbody>

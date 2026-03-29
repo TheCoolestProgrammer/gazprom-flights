@@ -70,7 +70,7 @@ async def create_request(
     )
     session.add(new_passenger)
     session.commit()
-    return RedirectResponse(url="/transport_dispatcher/", status_code=303)
+    return RedirectResponse(url="/transport_dispatcher/", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.get("/edit/{passenger_id}", response_class=HTMLResponse)

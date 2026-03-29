@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Регистрация на рейс | Система Газпром{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <h2 style="color: var(--gz-dark); margin-bottom: 1.5rem; border-bottom: 2px solid var(--gz-blue); padding-bottom: 0.5rem;">
+        Регистрация пассажира {{passenger.fullname}} на рейс
+    </h2>
+
+    <form action="/dispatcher/create/{{passenger.id}}" method="post" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        
+        <!-- Выбор рейса -->
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">Выберите рейс</label>
+            <select name="flight_id" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="" disabled selected>Выберите номер рейса и направление</option>
+                {% for flight in flights %}
+                    <option value="{{ flight.id }}">{{ flight.flight_routes.route }} | {{flight.flight_date}}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Посадочное место -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">Номер места</label>
+            <input type="text" name="place" maxlength="3" required placeholder="Напр: 12A" 
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; text-transform: uppercase;">
+            <small style="color: #666;">Максимум 3 символа</small>
+        </div>
+
+        <!-- Пустой блок для симметрии (или доп. поле, если нужно) -->
+        <div></div>
+
+        <!-- Кнопки -->
+        <div style="grid-column: span 2; display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1; font-weight: bold; background-color: var(--gz-blue); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                ЗАРЕГИСТРИРОВАТЬ
+            </button>
+            <a href="/dispatcher" class="btn" style="background: #ccc; color: #333; text-align: center; line-height: 40px; text-decoration: none; padding: 0 20px; border-radius: 4px;">Отмена</a>
+        </div>
+
+    </form>
+</div>
+{% endblock %}
