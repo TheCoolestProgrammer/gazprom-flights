@@ -24,9 +24,9 @@
                    style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
         </div>
 
-        <!-- Департамент -->
+        <!-- филиал -->
         <div>
-            <label style="display:block; margin-bottom:5px;">Департамент</label>
+            <label style="display:block; margin-bottom:5px;">филиал</label>
             <select name="department_id" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите подразделение</option>
                 {% for dept in departments %}
@@ -51,10 +51,41 @@
             </select>
         </div>
 
+        <!-- Маршрут перелета -->
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">Маршрут перелета</label>
+            <select name="flight_route_id" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="" disabled selected>Выберите направление</option>
+                {% for route in flight_routes %}
+                    <option value="{{ route.id }}">{{ route.route }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Планируемая дата и Вес груза -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">Планируемая дата</label>
+            <input type="date" name="planning_date" required 
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+        <div>
+            <label style="display:block; margin-bottom:5px;">Вес груза (кг)</label>
+            <input type="number" step="0.1" name="cargo_weight" placeholder="0.0" 
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
         <!-- Цель поездки -->
         <div style="grid-column: span 2;">
             <label style="display:block; margin-bottom:5px;">Цель поездки</label>
-            <textarea name="trip_purpose" required rows="3" placeholder="Укажите причину командировки или перевозки"
+            <textarea name="trip_purpose" required rows="3" placeholder="Укажите причину командировки"
+                      style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; resize: vertical;"></textarea>
+        </div>
+
+        <!-- Примечания -->
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">Примечания</label>
+            <textarea name="notes" rows="2" placeholder="Дополнительная информация"
                       style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; resize: vertical;"></textarea>
         </div>
 

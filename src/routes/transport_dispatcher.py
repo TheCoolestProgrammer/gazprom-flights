@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
+from src.models.flight_route import FlightRoute
 from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender 
 from src.models.department import Department
@@ -29,10 +30,12 @@ async def create_form(
     session: SessionDep, 
     user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER)) 
     ):
+    flight_routes = session.query(FlightRoute).all()
     departments = session.query(Department).all()
     return templates.TemplateResponse(request=request, name="transport_dispatcher/create.html", context={
         "user": user,
-        "departments": departments
+        "departments": departments,
+        "flight_routes":flight_routes
     })
 
 @router.post("/create")
@@ -45,17 +48,25 @@ async def create_request(
     birthdate: str = Form(...),
     gender: Gender = Form(...),
     trip_purpose: str = Form(...),
+    planning_date: str = Form(...),
+    flight_route_id: int = Form(...),
+    cargo_weight:float = Form(...),
+    notes:str = Form(...),
     user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
 ):
     new_passenger = Passenger(
         fullname=fullname,
         passport=passport,
         department_id=department_id,
-        birthdate=birthdate, # Нужна конвертация в date объект
+        birthdate=birthdate,
         gender=gender,
         trip_purpose=trip_purpose,
         status=RequestStatus.PENDING,
-        created_by=user.id
+        created_by=user.id,
+        planning_date=planning_date,
+        flight_route_id=flight_route_id,
+        cargo_weight=cargo_weight,
+        notes=notes
     )
     session.add(new_passenger)
     session.commit()
@@ -71,10 +82,13 @@ async def edit_form(
     ):
     passenger = session.query(Passenger).filter(Passenger.id==passenger_id).first()
     departments = session.query(Department).all()
+    flight_routes = session.query(FlightRoute).all()
+
     return templates.TemplateResponse(request=request, name="transport_dispatcher/edit.html", context={
         "user": user,
         "departments": departments,
-        "passenger":passenger
+        "passenger":passenger,
+        "flight_routes":flight_routes
     })
 
 @router.post("/edit/{passenger_id}")
@@ -88,6 +102,10 @@ async def edit_request(
     birthdate: str = Form(...),
     gender: Gender = Form(...),
     trip_purpose: str = Form(...),
+    planning_date: str = Form(...),
+    flight_route_id: int = Form(...),
+    cargo_weight:float = Form(...),
+    notes:str = Form(...),
     user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
 ):
     passenger = session.get(Passenger, passenger_id)
@@ -100,6 +118,10 @@ async def edit_request(
     passenger.trip_purpose=trip_purpose
     passenger.status=RequestStatus.PENDING
     passenger.created_by=user.id
+    passenger.planning_date=planning_date
+    passenger.flight_route_id=flight_route_id
+    passenger.cargo_weight=cargo_weight
+    passenger.notes=notes
 
     session.commit()
     return RedirectResponse(url="/transport_dispatcher/", status_code=303)
