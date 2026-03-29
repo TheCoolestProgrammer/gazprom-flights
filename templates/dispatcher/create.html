@@ -13,7 +13,7 @@
         <!-- Выбор рейса -->
         <div style="grid-column: span 2;">
             <label style="display:block; margin-bottom:5px;">Выберите рейс</label>
-            <select name="flight_id" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+            <select id="flight-select" name="flight_id" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите номер рейса и направление</option>
                 {% for flight in flights %}
                     <option value="{{ flight.id }}">{{ flight.flight_routes.route }} | {{flight.flight_date}}</option>
@@ -22,11 +22,29 @@
         </div>
 
         <!-- Посадочное место -->
-        <div>
-            <label style="display:block; margin-bottom:5px;">Номер места</label>
-            <input type="text" name="place" maxlength="3" required placeholder="Напр: 12A" 
-                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; text-transform: uppercase;">
-            <small style="color: #666;">Максимум 3 символа</small>
+        <div style="grid-column: span 2; margin-top: 20px;">
+            <label style="display:block; margin-bottom:15px; font-weight: bold;">Выберите посадочное место на схеме:</label>
+            
+            <input type="hidden" name="place" id="selected_seat_input" required>
+
+            <div class="plane-map">
+                <div class="cockpit">Кабина пилотов</div>
+                    <div class="cabin-grid" id="seat-map">
+                        {% for row in range(1, 11) %}
+                            <div class="seat-row">
+                                <div class="seat-num">{{ row }}</div>
+                                <div class="seat" data-seat="{{ row }}A">A</div>
+                                <div class="seat" data-seat="{{ row }}B">B</div>
+                                <div class="aisle"></div> <div class="seat" data-seat="{{ row }}C">C</div>
+                                <div class="seat" data-seat="{{ row }}D">D</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div id="seat-status" style="margin-top: 10px; font-weight: bold; color: var(--gz-blue);">
+                    Выбрано место: <span id="display-seat">не выбрано</span>
+                </div>
+            </div>
         </div>
 
         <!-- Пустой блок для симметрии (или доп. поле, если нужно) -->
@@ -42,4 +60,145 @@
 
     </form>
 </div>
+<style>
+.plane-map {
+    background: #f4f4f4;
+    padding: 20px;
+    border-radius: 50px 50px 10px 10px; /* Скругление как у носа самолета */
+    border: 2px solid #ddd;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.cockpit {
+    text-align: center;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-bottom: 3px double #ccc;
+    font-size: 0.8rem;
+    color: #999;
+    text-transform: uppercase;
+}
+
+.seat-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 5px;
+}
+
+.seat {
+    width: 35px;
+    height: 35px;
+    background-color: white;
+    border: 2px solid var(--gz-blue);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.seat:hover {
+    background-color: #e3f2fd;
+}
+
+.seat.selected {
+    background-color: var(--gz-blue) !important;
+    color: white;
+}
+
+.seat.occupied {
+    background-color: #ccc;
+    border-color: #999;
+    cursor: not-allowed;
+    color: #666;
+}
+
+.aisle {
+    width: 20px;
+}
+
+.seat-num {
+    width: 25px;
+    color: #999;
+    font-size: 0.7rem;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const seats = document.querySelectorAll('.seat:not(.occupied)');
+    const hiddenInput = document.getElementById('selected_seat_input');
+    const displaySpan = document.getElementById('display-seat');
+
+    seats.forEach(seat => {
+        seat.addEventListener('click', function() {
+            // Снимаем выделение с других мест
+            seats.forEach(s => s.classList.remove('selected'));
+            
+            // Выделяем текущее
+            this.classList.add('selected');
+            
+            // Обновляем значение для формы
+            const seatNumber = this.getAttribute('data-seat');
+            hiddenInput.value = seatNumber;
+            displaySpan.textContent = seatNumber;
+        });
+    });
+});
+document.addEventListener('DOMContentLoaded', function() {
+    const flightSelect = document.getElementById('flight-select');
+    const seats = document.querySelectorAll('.seat');
+    const hiddenInput = document.getElementById('selected_seat_input');
+    const displaySpan = document.getElementById('display-seat');
+
+    // Функция сброса карты мест
+    function resetSeatMap() {
+        seats.forEach(seat => {
+            seat.classList.remove('occupied', 'selected');
+            seat.style.pointerEvents = 'auto'; // Включаем клики обратно
+        });
+        hiddenInput.value = '';
+        displaySpan.textContent = 'не выбрано';
+    }
+
+    // Слушатель изменения рейса
+    flightSelect.addEventListener('change', function() {
+        const flightId = this.value;
+        if (!flightId) return;
+
+        resetSeatMap();
+
+        // AJAX запрос к FastAPI
+        fetch(`/dispatcher/get_places/${flightId}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Ошибка загрузки мест');
+                return response.json();
+            })
+            .then(occupiedSeats => {
+                // occupiedSeats должен быть массивом строк, например: ["1A", "3C", "10D"]
+                markOccupiedSeats(occupiedSeats);
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Не удалось загрузить схему занятых мест');
+            });
+    });
+
+    // Функция закрашивания занятых мест
+    function markOccupiedSeats(occupiedList) {
+        seats.forEach(seat => {
+            const seatNumber = seat.getAttribute('data-seat');
+            
+            if (occupiedList.includes(seatNumber)) {
+                seat.classList.add('occupied');
+                seat.style.pointerEvents = 'none'; // Запрещаем клик по занятому
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

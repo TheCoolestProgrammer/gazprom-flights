@@ -44,7 +44,6 @@ async def create_view(
 
 @router.post("/create/{passenger_id}", response_class=HTMLResponse)
 async def create_post(
-    request: Request,
     session: SessionDep,
     passenger_id:int,
     flight_id:int = Form(...),
@@ -61,3 +60,11 @@ async def create_post(
     return RedirectResponse(url="/dispatcher/", status_code=status.HTTP_303_SEE_OTHER)
 
 
+@router.get("/get_places/{flight_id}")
+async def get_places(
+    flight_id:int,
+    session: SessionDep,
+    user: User = Depends(RoleChecker(Role.DISPATCHER))
+):
+    occupied = session.query(PassengerFlight.place).filter(PassengerFlight.flight_id==flight_id).all()
+    return [item[0] for item in occupied]
