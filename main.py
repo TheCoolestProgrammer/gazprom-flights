@@ -48,9 +48,18 @@ async def auth_exception_handler(request: Request, exc: HTTPException):
 async def role_exception_handler(request: Request, exc: HTTPException):
     return templates.TemplateResponse(
         request=request, 
-        name="errors/forbiden.html", 
+        name="errors/error.html", 
         context={
         "message": "FORBIDEN!!!! вам сюда нельзя!!!",
+    })
+
+@app.exception_handler(status.HTTP_204_NO_CONTENT)
+async def content_exception_handler(request: Request, exc: HTTPException):
+    return templates.TemplateResponse(
+        request=request, 
+        name="errors/error.html", 
+        context={
+        "message": "no content",
     })
 
 @app.get("/health_check")
@@ -59,5 +68,9 @@ def health_check():
 
 # Ваш корневой роутер теперь может проверять куки
 @app.get("/")
-def home(request: Request, user = Depends(get_current_user)):
-    return {"status": "authenticated", "message": "Добро пожаловать в систему"}
+def home(request: Request, userdb = Depends(get_current_user)):
+    redirection_table = user.Role.REDIRECTION_TABLE()
+    if redirection_table[userdb.role]:
+        return RedirectResponse(redirection_table[userdb.role])
+    else:
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT)

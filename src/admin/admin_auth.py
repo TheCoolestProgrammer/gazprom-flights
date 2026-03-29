@@ -1,7 +1,9 @@
+from fastapi.responses import RedirectResponse
 from sqladmin.authentication import AuthenticationBackend
-from fastapi import Request
+from fastapi import Request, status
 from src.security import verify_token, create_tokens, verify_password
 from src.models.user import User, Role
+from src.config import config
 
 from src.database import engine
 from sqlalchemy.orm import Session
@@ -37,9 +39,10 @@ class AdminAuth(AuthenticationBackend):
 
     async def logout(self, request: Request) -> bool:
         request.session.clear()
-        return True
+        return RedirectResponse(url="/auth/logout", status_code=status.HTTP_302_FOUND)
+
 
     
 
 # Инициализируем секретный ключ для сессий админки
-admin_auth_backend = AdminAuth(secret_key="SUPER_SECRET_KEY_FOR_ADMIN")
+admin_auth_backend = AdminAuth(secret_key=config.ADMIN_SECRET_KEY)

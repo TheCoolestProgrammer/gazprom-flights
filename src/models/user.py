@@ -14,6 +14,15 @@ class Role(enum.Enum):
     DISPATCHER_DIRECTOR = "dispatcher_director"
     DISPATCHER_DEPUTY_DIRECTOR = "dispatcher_deputy_director"
     ADMIN = "admin"
+
+    @staticmethod
+    def REDIRECTION_TABLE()->dict:
+        return {
+            Role.ADMIN: "/admin",
+            Role.DEPARTMENT_DEIRECTOR:"/department_director",
+            Role.TRANSPORT_DISPATHER:"/transport_dispatcher"
+        }
+
     
 class User(Base):
     __tablename__ = "users"

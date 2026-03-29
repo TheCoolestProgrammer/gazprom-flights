@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from .config import config
+from src.config import config
 from contextlib import contextmanager
 
 engine = create_engine(config.DATABASE_URL)

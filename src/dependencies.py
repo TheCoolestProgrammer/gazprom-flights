@@ -41,5 +41,5 @@ class RoleChecker:
 
     def __call__(self, user: User = Depends(get_current_user)):
         if user.role != self.allowed_role:
-            raise HTTPException(status_code=403)
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
         return user
