@@ -7,13 +7,13 @@ import enum
 
 
 class Role(enum.Enum):
-    TRANSPORT_DISPATHER = "transport_dispatcher"
-    DEPARTMENT_DEIRECTOR = "department_director"
-    DEPARTMENT_DEPUTY_DIRECTOR = "department_deputy_director"
-    DISPATCHER = "dispatcher"
-    DISPATCHER_DIRECTOR = "dispatcher_director"
-    DISPATCHER_DEPUTY_DIRECTOR = "dispatcher_deputy_director"
-    ADMIN = "admin"
+    TRANSPORT_DISPATHER = "транспортный диспетчер"
+    DEPARTMENT_DEIRECTOR = "директор филиала"
+    DEPARTMENT_DEPUTY_DIRECTOR = "заместитель директора филиала"
+    DISPATCHER = "диспетчер"
+    DISPATCHER_DIRECTOR = "старший диспетчер"
+    DISPATCHER_DEPUTY_DIRECTOR = "заместитель старшего диспетчера"
+    ADMIN = "администратор"
 
     @staticmethod
     def REDIRECTION_TABLE()->dict:

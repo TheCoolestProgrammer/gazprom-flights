@@ -30,7 +30,7 @@ admin = Admin(
     app, 
     engine, 
     authentication_backend=admin_auth_backend,
-    title="Панель управления Газпром",
+    title="Панель управления авиаперевозками",
     base_url="/admin"
 )
 
