@@ -21,7 +21,8 @@ class Role(enum.Enum):
             Role.ADMIN: "/admin",
             Role.DEPARTMENT_DEIRECTOR:"/department_director",
             Role.TRANSPORT_DISPATHER:"/transport_dispatcher",
-            Role.DISPATCHER:"/dispatcher"
+            Role.DISPATCHER:"/dispatcher",
+            Role.DISPATCHER_DIRECTOR:"/main_dispatcher"
         }
 
     

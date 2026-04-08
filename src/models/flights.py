@@ -9,6 +9,7 @@ class Flight(Base):
     id = Column(Integer, primary_key=True, index=True)
     aircraft_type = Column(String)
     flight_number = Column(BigInteger)
+    departure_date = Column(Date)
     departure_time = Column(Time)
     place_number = Column(Integer)
     route=Column(String)

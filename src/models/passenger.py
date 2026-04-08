@@ -57,7 +57,7 @@ class Passenger(Base):
     gtu_relation = Column(Enum(GTURelation), default=GTURelation.GTU_EMPLOYEE)
     trip_purpose = Column(Enum(TripPurpose), nullable=False)
     cargo_weight = Column(Float)
-    notes = Column(Text)
+    notes = Column(Text, default="")
     request_date = Column(Date, default=datetime.datetime.now)
     planning_date = Column(Date)
     department_director_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)

@@ -27,7 +27,6 @@ async def dashboard(
     })
 
 
-request_status: RequestStatus
 
 @router.patch("/change_status/{passenger_id}", response_class=HTMLResponse)
 async def change_status(
