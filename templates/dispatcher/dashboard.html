@@ -2,110 +2,174 @@
 
 {% block content %}
 <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2>Все заявки на перевозку</h2>
-        <!-- Кнопка для отправки формы -->
-        <a href="/dispatcher/done">выполненные заявки</a>
-        <button type="submit" form="status-form" class="btn-submit">Изменить статус выбранных</button>
+        <div>
+            <a href="/dispatcher/done" style="margin-right: 15px;">выполненные заявки</a>
+            <button type="submit" form="status-form" class="btn-submit">Изменить статус выбранных</button>
+        </div>
     </div>
 
-    <!-- Оборачиваем таблицу в форму -->
+    <!-- Блок фильтров -->
+    <form method="GET" action="" style="margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div>
+                <label style="font-weight: bold;">Желаемая дата:</label><br>
+                <input type="date" name="planning_date" value="{{ filters.planning_date or '' }}" style="width: 100%; padding: 5px;">
+            </div>
+            
+            <div>
+                <label style="font-weight: bold;">Откуда:</label><br>
+                <select name="flight_from" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for city in unique_cities_from %}
+                        <option value="{{ city }}" {% if filters.flight_from == city %}selected{% endif %}>{{ city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label style="font-weight: bold;">Куда:</label><br>
+                <select name="flight_to" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for city in unique_cities_to %}
+                        <option value="{{ city }}" {% if filters.flight_to == city %}selected{% endif %}>{{ city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label style="font-weight: bold;">Статус директора:</label><br>
+                <select name="director_status" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for status_name, status_value in unique_director_statuses %}
+                        <option value="{{ status_name }}" {% if filters.director_status == status_name %}selected{% endif %}>{{ status_value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label style="font-weight: bold;">Статус диспетчера:</label><br>
+                <select name="dispatcher_status" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for status_name, status_value in unique_dispatcher_statuses %}
+                        <option value="{{ status_name }}" {% if filters.dispatcher_status == status_name %}selected{% endif %}>{{ status_value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: flex-end;">
+                <button type="submit" style="background: #007bff; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer;">Применить</button>
+                <a href="?" style="text-decoration: none; padding: 5px 15px; background: #6c757d; color: white; border-radius: 4px;">Сбросить</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Форма изменения статуса -->
     <form id="status-form" action="/dispatcher/change_status" method="POST">
-        <select name="flight">
-            {%for i in flights%}
-                <option value="{{i.id}}">{{i.aircraft_type}}-{{i.flight_number}}-{{i.route}}</option>
-            {%endfor%}
-        </select>
-        <table>
-            <thead>
-                <tr>
-                    <th><input type="checkbox" id="select-all"></th> <!-- Чекбокс "Выбрать все" -->
-                    <th>id</th>
-                    <th>Дата заявки</th>
-                    <th>желаемая дата</th>
-                    <th>ФИО</th>
-                    <th>Паспорт</th>
-                    <th>вес багажа</th>
-                    <th>откуда</th>
-                    <th>куда</th>
-                    <th>ГТЮ</th>
-                    <th>Статус директора</th>
-                    <th>Статус диспетчера</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for req in requests %}
-                <tr>
-                    <td>
-                        <!-- value="{{ req.id }}" — это ID заявки из вашей БД -->
-                        <input type="checkbox" name="selected_ids" value="{{ req.id }}">
-                    </td>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ req.request_date }}</td>
-                    <td>{{ req.planning_date }}</td>
-                    <td>{{ req.fullname }}</td>
-                    <td>{{ req.passport }}</td>
-                    <td>{{ req.cargo_weight }}</td>
-                    <td>{{ req.flight_from.name }}</td>
-                    <td>{{ req.flight_to.name }}</td>
-                    <td>{{ req.gtu_relation.value }}</td>
-                    <td>
-                        <span class="status-{{ req.department_director_status.name.lower() }}">
-                            {{ req.department_director_status.value }}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="status-{{ req.main_dispatcher_status.name.lower() }}">
-                            {{ req.main_dispatcher_status.value }}
-                        </span>
-                    </td>
-                </tr>
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold;">Назначить на рейс:</label>
+            <select name="flight" style="margin-left: 10px; padding: 5px;">
+                {% for flight in flights %}
+                    <option value="{{ flight.id }}">{{ flight.aircraft_type }}-{{ flight.flight_number }}-{{ flight.route }}</option>
                 {% endfor %}
-            </tbody>
-        </table>
+            </select>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: #f2f2f2;">
+                        <th style="padding: 10px; border: 1px solid #ddd;"><input type="checkbox" id="select-all"></th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">№</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Дата заявки</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Желаемая дата</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">ФИО</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Паспорт</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Вес багажа</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Откуда</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Куда</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">ГТЮ</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Статус директора</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Статус диспетчера</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                            <input type="checkbox" name="selected_ids" value="{{ req.id }}">
+                        </td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">{{ loop.index }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.request_date }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.planning_date }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.fullname }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.passport }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.cargo_weight }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_from.name if req.flight_from else '-' }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_to.name if req.flight_to else '-' }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.gtu_relation.value if req.gtu_relation else '-' }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">
+                            <span class="status-{{ req.department_director_status.name.lower() if req.department_director_status else 'unknown' }}">
+                                {{ req.department_director_status.value if req.department_director_status else '-' }}
+                            </span>
+                        </td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">
+                            <span class="status-{{ req.main_dispatcher_status.name.lower() if req.main_dispatcher_status else 'unknown' }}">
+                                {{ req.main_dispatcher_status.value if req.main_dispatcher_status else '-' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="12" style="padding: 20px; text-align: center;">Нет заявок, соответствующих фильтрам</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </form>
 </div>
 
 <script>
-    // Скрипт для работы чекбокса "Выбрать все"
-    document.getElementById('select-all').onclick = function() {
-        var checkboxes = document.getElementsByName('selected_ids');
-        for (var checkbox of checkboxes) {
-            checkbox.checked = this.checked;
+    // Чекбокс "Выбрать все"
+    const selectAllCheckbox = document.getElementById('select-all');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.onclick = function() {
+            const checkboxes = document.getElementsByName('selected_ids');
+            for (let checkbox of checkboxes) {
+                checkbox.checked = this.checked;
+            }
         }
     }
 </script>
+
+<style>
+    .status-approved, .status-confirmed {
+        color: green;
+        font-weight: bold;
+    }
+    .status-pending, .status-waiting {
+        color: orange;
+        font-weight: bold;
+    }
+    .status-rejected, .status-cancelled {
+        color: red;
+        font-weight: bold;
+    }
+    .btn-submit {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-submit:hover {
+        background-color: #218838;
+    }
+    button[type="submit"]:hover {
+        opacity: 0.9;
+    }
+</style>
 {% endblock %}
-<!-- <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>перелеты и пассажиры</h2>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>дата</th>
-                <th>маршрут</th>
-                <th>пассажир</th>
-                <th>Паспорт</th>
-                <th>вес багажа</th>
-                <th>место</th>
-                <th>id перелета</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for flight in flights %}
-            <tr>
-                <td>{{ flight.flights.flight_date }}</td>
-                <td>{{ flight.flights.flight_routes.route}}</td>
-                <td>{{ flight.passengers.fullname }}</td>
-                <td>{{ flight.passengers.passport }}</td>
-                <td>{{ flight.passengers.cargo_weight }}</td>
-                <td>{{ flight.place }}</td>
-                <td>{{ flight.flight_id }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div> -->
-
