@@ -12,6 +12,8 @@ class Department(Base):
 
     passengers_departing = relationship("Passenger",foreign_keys=[Passenger.flight_from_id],back_populates='flight_from')
     passengers_arriving = relationship("Passenger",foreign_keys=[Passenger.flight_to_id],back_populates='flight_to')
+    passengers_belong = relationship("Passenger",foreign_keys=[Passenger.department_id],back_populates='departments')
+
     users = relationship("User",back_populates="departments")
     
     def __str__(self):

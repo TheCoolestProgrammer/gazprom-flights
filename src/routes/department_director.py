@@ -6,7 +6,7 @@ from src.dependencies import get_current_user, RoleChecker
 from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender
 from src.models.department import Department
-from src.schemas.department_director import StatusUpdate
+from src.models.passenger import RequestStatus
 
 router = APIRouter(prefix="/department_director", tags=["department_director"])
 templates = Jinja2Templates(directory="templates")
@@ -22,17 +22,19 @@ async def dashboard(
     requests = session.query(Passenger).filter(Passenger.department_id==user.department_id).order_by(Passenger.request_date.desc()).all()
     return templates.TemplateResponse(request=request, name="department_director/dashboard.html", context={
         "user": user,
-        "requests": requests
+        "requests": requests,
+        "Status":RequestStatus
     })
 
 
+request_status: RequestStatus
 
 @router.patch("/change_status/{passenger_id}", response_class=HTMLResponse)
 async def change_status(
     request: Request,
     session: SessionDep,
     passenger_id:int,
-    status_scheme:StatusUpdate,
+    request_status:RequestStatus = Body(..., embed=True),
     user: User = Depends(RoleChecker(Role.DEPARTMENT_DEIRECTOR))
     ):
     passenger = session.get(Passenger,passenger_id)
@@ -43,7 +45,7 @@ async def change_status(
             detail=f"Пассажир с ID {passenger_id} не найден"
         )
     # try:
-    passenger.status = status_scheme.request_status
+    passenger.department_director_status = request_status
     session.commit()
     
     return JSONResponse(

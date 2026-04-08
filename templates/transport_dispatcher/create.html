@@ -61,7 +61,17 @@
                 {% endfor %}
             </select>
         </div>
-
+        
+        <!-- принадлежит филиалу -->
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">принадлежит филиалу</label>
+            <select name="department_id" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="" disabled selected>Выберите филиал</option>
+                {% for route in departments %}
+                    <option value="{{ route.id }}">{{ route.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
         <!-- Планируемая дата и Вес груза -->
         <div>
             <label style="display:block; margin-bottom:5px;">Планируемая дата</label>

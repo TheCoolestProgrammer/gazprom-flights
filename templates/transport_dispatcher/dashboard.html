@@ -17,6 +17,7 @@
                 <th>отношение к ГТЮ</th>
                 <th>откуда</th>
                 <th>куда</th>
+                <th>планируемая дата</th>
                 <th>Статус директора</th>
                 <th>статус старшего диспетчера</th>
                 <th>Действия</th>
@@ -32,6 +33,7 @@
                 <td>{{ req.gtu_relation.value }}</td>
                 <td>{{ req.flight_from.name}}</td>
                 <td>{{ req.flight_to.name}}</td>
+                <td>{{ req.planning_date }}</td>
                 <td>
                     <span class="status-{{ req.department_director_status.name.lower() }}">
                         {{ req.department_director_status.value }}

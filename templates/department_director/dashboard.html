@@ -11,8 +11,11 @@
             <tr>
                 <th>Дата</th>
                 <th>ФИО</th>
-                <th>Паспорт</th>
                 <th>Цель</th>
+                <th>отношение к ГТЮ</th>
+                <th>откуда</th>
+                <th>куда</th>
+                <th>планируемая дата</th>
                 <th>Статус</th>
                 <th>Действия</th>
             </tr>
@@ -22,29 +25,32 @@
             <tr>
                 <td>{{ req.request_date }}</td>
                 <td>{{ req.fullname }}</td>
-                <td>{{ req.passport }}</td>
-                <td>{{ req.trip_purpose[:30] }}...</td>
+                <td>{{ req.trip_purpose.value }}...</td>
+                <td>{{ req.gtu_relation.value }}</td>
+                <td>{{ req.flight_from.name}}</td>
+                <td>{{ req.flight_to.name}}</td>
+                <td>{{ req.planning_date }}</td>
                 <td>
-                    <span class="status-{{ req.status.name.lower() }}">
-                        {{ req.status.value }}
+                    <span class="status-{{ req.department_director_status.name.lower() }}">
+                        {{ req.department_director_status.value }}
                     </span>
                 </td>
 
                 <td>
                     <button type="button" 
                         class="btn btn-danger" 
-                        onclick="change_request_status('{{ req.id }}', 'confirmed')"
+                        onclick="change_request_status('{{ req.id }}', '{{Status.CONFIRMED.value}}')"
                         style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
-                        одобрить
+                        {{Status.CONFIRMED.value}}
                     </button>
                 </td>
 
                 <td>
                     <button type="button" 
                         class="btn btn-danger" 
-                        onclick="change_request_status('{{ req.id }}', 'rejected')"
+                        onclick="change_request_status('{{ req.id }}', '{{Status.REJECTED.value}}')"
                         style="background: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
-                        отклонить
+                        {{Status.REJECTED.value}}
                     </button>
                 </td>
             </tr>

@@ -52,7 +52,8 @@ class Passenger(Base):
     flight_from_id = Column(Integer, ForeignKey("departments.id"))
     # flight_route_id = Column(Integer, ForeignKey("flight_routes.id"))
     flight_to_id = Column(Integer, ForeignKey("departments.id"))
-    
+    department_id = Column(Integer, ForeignKey("departments.id"))
+
     gtu_relation = Column(Enum(GTURelation), default=GTURelation.GTU_EMPLOYEE)
     trip_purpose = Column(Enum(TripPurpose), nullable=False)
     cargo_weight = Column(Float)
@@ -67,6 +68,7 @@ class Passenger(Base):
 
     flight_from = relationship("Department",foreign_keys=[flight_from_id], back_populates="passengers_departing")
     flight_to = relationship("Department",foreign_keys=[flight_to_id], back_populates="passengers_arriving")
+    departments = relationship("Department",foreign_keys=[department_id], back_populates="passengers_belong")
 
     passenger_flights = relationship("PassengerFlight",back_populates='passengers')
     users = relationship("User",back_populates="passengers")
