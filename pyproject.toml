@@ -12,6 +12,7 @@ dependencies = [
     "passlib[argon2]>=1.7.4",
     "psycopg2-binary>=2.9.11",
     "pydantic-settings>=2.13.1",
+    "python-docx>=1.2.0",
     "python-jose>=3.5.0",
     "python-multipart>=0.0.22",
     "sqladmin>=0.23.0",

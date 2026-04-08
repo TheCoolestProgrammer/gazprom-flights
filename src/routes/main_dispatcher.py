@@ -1,12 +1,15 @@
-from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, status
+from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, status,UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from src.crud.flight import create_flights_bulk
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
 # from src.models.flight_route import FlightRoute
 from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
 from src.models.department import Department
+from src.schemas.flight import FlightCreate, FlightResponse, FlightParseResponse
+from src.parsers.docs_parser import parse_flight_docx
 
 router = APIRouter(prefix="/main_dispatcher", tags=["main_dispatcher"])
 templates = Jinja2Templates(directory="templates")
@@ -108,3 +111,85 @@ async def change_status(
         content={"message": "Successfully changed"}, 
         status_code=status.HTTP_200_OK
     )
+
+
+@router.post("/upload-docx", response_model=FlightParseResponse)
+async def upload_flights_docx(
+    db: SessionDep,
+    file: UploadFile = File(..., description="DOCX файл с заявкой на полёты")
+):
+    """
+    Загружает DOCX файл с заявкой на выполнение полетов,
+    парсит его и сохраняет данные в базу данных.
+    """
+    # Проверка типа файла
+    if not file.filename.endswith('.docx'):
+        raise HTTPException(
+            status_code=400,
+            detail="Неверный формат файла. Ожидается файл с расширением .docx"
+        )
+    
+    try:
+        # Чтение содержимого файла
+        file_content = await file.read()
+        
+        # Парсинг документа
+        parsed_data = parse_flight_docx(file_content)
+        
+        if not parsed_data["departure_date"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Не удалось найти дату выполнения полётов в документе"
+            )
+        
+        if not parsed_data["flights"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Не удалось найти рейсы в документе"
+            )
+        
+        # Подготовка данных для сохранения
+        flights_to_create = []
+        for flight_data in parsed_data["flights"]:
+            flight_create = FlightCreate(
+                aircraft_type=flight_data["aircraft_type"],
+                flight_number=flight_data["flight_number"],
+                departure_date=parsed_data["departure_date"],
+                departure_time=flight_data["departure_time"],
+                place_number=flight_data["place_number"],
+                route=flight_data["route"]
+            )
+            flights_to_create.append(flight_create)
+        
+        # Сохранение в БД
+        saved_flights = create_flights_bulk(db, flights_to_create)
+        
+        # Преобразование в response schema
+        flights_response = [
+            FlightResponse(
+                id=flight.id,
+                aircraft_type=flight.aircraft_type,
+                flight_number=flight.flight_number,
+                departure_date=flight.departure_date,
+                departure_time=flight.departure_time,
+                place_number=flight.place_number,
+                route=flight.route
+            )
+            for flight in saved_flights
+        ]
+        
+        return FlightParseResponse(
+            status="success",
+            message=f"Успешно обработано {len(saved_flights)} рейсов",
+            flights_parsed=len(saved_flights),
+            flights_saved=flights_response
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        # logger.error(f"Ошибка при обработке файла: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Внутренняя ошибка сервера при обработке файла: {str(e)}"
+        )
