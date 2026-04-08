@@ -9,7 +9,7 @@ class PassengerFlight(Base):
     
     flight_id = Column(Integer, ForeignKey("flights.id"))
     passenger_id = Column(Integer, ForeignKey("passengers.id"))
-    place = Column(String(3), nullable=False)
+    # place = Column(String(3), nullable=False)
     # flight_routes = relationship("FlightRoute",back_populates='passenger_flights')
     flights = relationship("Flight",back_populates='passenger_flights')
     passengers = relationship("Passenger",back_populates='passenger_flights')

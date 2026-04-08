@@ -3,9 +3,9 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
-from src.models.flight_route import FlightRoute
+# from src.models.flight_route import FlightRoute
 from src.models.user import User, Role
-from src.models.passenger import Passenger, RequestStatus,Gender 
+from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
 from src.models.department import Department
 
 router = APIRouter(prefix="/transport_dispatcher", tags=["transport_dispatcher"])
@@ -30,12 +30,14 @@ async def create_form(
     session: SessionDep, 
     user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER)) 
     ):
-    flight_routes = session.query(FlightRoute).all()
+    # flight_routes = session.query(Department).all()
     departments = session.query(Department).all()
     return templates.TemplateResponse(request=request, name="transport_dispatcher/create.html", context={
         "user": user,
         "departments": departments,
-        "flight_routes":flight_routes
+        # "flight_routes":flight_routes
+        "TripPurpose":TripPurpose,
+        "GTURelation":GTURelation
     })
 
 @router.post("/create")
@@ -44,29 +46,29 @@ async def create_request(
     session: SessionDep,
     fullname: str = Form(...),
     passport: int = Form(...),
-    department_id: int = Form(...),
+    flight_from: int = Form(...),
     birthdate: str = Form(...),
     gender: Gender = Form(...),
-    trip_purpose: str = Form(...),
+    trip_purpose: TripPurpose = Form(...),
     planning_date: str = Form(...),
-    flight_route_id: int = Form(...),
+    flight_to: int = Form(...),
     cargo_weight:float = Form(...),
-    notes:str = Form(...),
+    gtu_relation:GTURelation = Form(...),
     user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
 ):
     new_passenger = Passenger(
         fullname=fullname,
         passport=passport,
-        department_id=department_id,
+        flight_to_id=flight_to,
         birthdate=birthdate,
         gender=gender,
         trip_purpose=trip_purpose,
-        status=RequestStatus.PENDING,
+        # status=RequestStatus.PENDING,
         created_by=user.id,
         planning_date=planning_date,
-        flight_route_id=flight_route_id,
+        flight_from_id=flight_from,
         cargo_weight=cargo_weight,
-        notes=notes
+        gtu_relation=gtu_relation
     )
     session.add(new_passenger)
     session.commit()
@@ -82,13 +84,15 @@ async def edit_form(
     ):
     passenger = session.query(Passenger).filter(Passenger.id==passenger_id).first()
     departments = session.query(Department).all()
-    flight_routes = session.query(FlightRoute).all()
+    # flight_routes = session.query(FlightRoute).all()
 
     return templates.TemplateResponse(request=request, name="transport_dispatcher/edit.html", context={
         "user": user,
         "departments": departments,
         "passenger":passenger,
-        "flight_routes":flight_routes
+        # "flight_routes":flight_routes
+        "TripPurpose":TripPurpose,
+        "GTURelation":GTURelation
     })
 
 @router.post("/edit/{passenger_id}")
@@ -98,30 +102,32 @@ async def edit_request(
     passenger_id:int,
     fullname: str = Form(...),
     passport: int = Form(...),
-    department_id: int = Form(...),
+    flight_from: int = Form(...),
     birthdate: str = Form(...),
     gender: Gender = Form(...),
-    trip_purpose: str = Form(...),
+    trip_purpose: TripPurpose = Form(...),
     planning_date: str = Form(...),
-    flight_route_id: int = Form(...),
+    flight_to: int = Form(...),
     cargo_weight:float = Form(...),
-    notes:str = Form(...),
+    gtu_relation:GTURelation = Form(...),
+    # notes:str = Form(...),
     user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
 ):
     passenger = session.get(Passenger, passenger_id)
     
     passenger.fullname=fullname
     passenger.passport=passport
-    passenger.department_id=department_id
+    passenger.flight_from_id=flight_from
     passenger.birthdate=birthdate # Нужна конвертация в date объект
     passenger.gender=gender
     passenger.trip_purpose=trip_purpose
     passenger.status=RequestStatus.PENDING
     passenger.created_by=user.id
     passenger.planning_date=planning_date
-    passenger.flight_route_id=flight_route_id
+    passenger.flight_to_id=flight_to
     passenger.cargo_weight=cargo_weight
-    passenger.notes=notes
+    passenger.gtu_relation=gtu_relation
+    # passenger.notes=notes
 
     session.commit()
     return RedirectResponse(url="/transport_dispatcher/", status_code=303)

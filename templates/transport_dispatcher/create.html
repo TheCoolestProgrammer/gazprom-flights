@@ -26,8 +26,8 @@
 
         <!-- филиал -->
         <div>
-            <label style="display:block; margin-bottom:5px;">филиал</label>
-            <select name="department_id" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+            <label style="display:block; margin-bottom:5px;">место отправления</label>
+            <select name="flight_from" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите подразделение</option>
                 {% for dept in departments %}
                     <option value="{{ dept.id }}">{{ dept.name }}</option>
@@ -46,18 +46,18 @@
         <div>
             <label style="display:block; margin-bottom:5px;">Пол</label>
             <select name="gender" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
-                <option value="male">Мужской</option>
-                <option value="female">Женский</option>
+                <option value="муж">Мужской</option>
+                <option value="жен">Женский</option>
             </select>
         </div>
 
         <!-- Маршрут перелета -->
         <div style="grid-column: span 2;">
-            <label style="display:block; margin-bottom:5px;">Маршрут перелета</label>
-            <select name="flight_route_id" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+            <label style="display:block; margin-bottom:5px;">точка назначения</label>
+            <select name="flight_to" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите направление</option>
-                {% for route in flight_routes %}
-                    <option value="{{ route.id }}">{{ route.route }}</option>
+                {% for route in departments %}
+                    <option value="{{ route.id }}">{{ route.name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -78,16 +78,35 @@
         <!-- Цель поездки -->
         <div style="grid-column: span 2;">
             <label style="display:block; margin-bottom:5px;">Цель поездки</label>
-            <textarea name="trip_purpose" required rows="3" placeholder="Укажите причину командировки"
-                      style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; resize: vertical;"></textarea>
+            <!-- <textarea name="trip_purpose" required rows="3" placeholder="Укажите причину командировки" -->
+                      <!-- style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; resize: vertical;"></textarea> -->
+            <select name="trip_purpose" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="" disabled selected>Выберите направление</option>
+                {% for purpose in TripPurpose %}
+                    <option value="{{ purpose.value }}">{{ purpose.value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- отношение к ГТЮ -->
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">отношение к ГТЮ</label>
+            <!-- <textarea name="trip_purpose" required rows="3" placeholder="Укажите причину командировки" -->
+                      <!-- style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; resize: vertical;"></textarea> -->
+            <select name="gtu_relation" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="" disabled selected>Выберите отношение</option>
+                {% for relation in GTURelation %}
+                    <option value="{{ relation.value }}">{{ relation.value }}</option>
+                {% endfor %}
+            </select>
         </div>
 
         <!-- Примечания -->
-        <div style="grid-column: span 2;">
+        <!-- <div style="grid-column: span 2;">
             <label style="display:block; margin-bottom:5px;">Примечания</label>
             <textarea name="notes" rows="2" placeholder="Дополнительная информация"
                       style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; resize: vertical;"></textarea>
-        </div>
+        </div> -->
 
         <!-- Кнопки -->
         <div style="grid-column: span 2; display: flex; gap: 10px; margin-top: 10px;">

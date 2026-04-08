@@ -27,5 +27,5 @@ def get_session():
 
 def create_db_and_tables():
     Base.metadata.create_all(bind=engine)
-
+    # Base.metadata.drop_all(bind=engine)
 SessionDep = Annotated[Session, Depends(get_session)]

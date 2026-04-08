@@ -14,7 +14,11 @@
                 <th>ФИО</th>
                 <th>Паспорт</th>
                 <th>Цель</th>
-                <th>Статус</th>
+                <th>отношение к ГТЮ</th>
+                <th>откуда</th>
+                <th>куда</th>
+                <th>Статус директора</th>
+                <th>статус старшего диспетчера</th>
                 <th>Действия</th>
             </tr>
         </thead>
@@ -24,10 +28,18 @@
                 <td>{{ req.request_date }}</td>
                 <td>{{ req.fullname }}</td>
                 <td>{{ req.passport }}</td>
-                <td>{{ req.trip_purpose[:30] }}...</td>
+                <td>{{ req.trip_purpose.value}}</td>
+                <td>{{ req.gtu_relation.value }}</td>
+                <td>{{ req.flight_from.name}}</td>
+                <td>{{ req.flight_to.name}}</td>
                 <td>
-                    <span class="status-{{ req.status.name.lower() }}">
-                        {{ req.status.value }}
+                    <span class="status-{{ req.department_director_status.name.lower() }}">
+                        {{ req.department_director_status.value }}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-{{ req.main_dispatcher_status.name.lower() }}">
+                        {{ req.main_dispatcher_status.value }}
                     </span>
                 </td>
                 <td>

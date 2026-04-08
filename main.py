@@ -5,17 +5,17 @@ from src.database import create_db_and_tables, engine
 from contextlib import asynccontextmanager
 from src.routes import auth, transport_dispatcher, department_director, dispatcher
 from src.dependencies import get_current_user
-from src.models import department, flight_route, passenger, flights, passenger_flight, user
+from src.models import department, passenger, flights, passenger_flight, user
 from sqladmin import Admin
 from src.admin.admin_auth import admin_auth_backend
 from src.admin.admin_views import (
-    UserAdmin, DepartmentAdmin, FlightRoutesAdmin, 
+    UserAdmin, DepartmentAdmin, 
     PassengerAdmin, PassengerFlightAdmin, FlightsAdmin
 )
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # create_db_and_tables()
+    create_db_and_tables()
     yield
 
 templates = Jinja2Templates(directory="templates")
@@ -37,7 +37,6 @@ admin = Admin(
 # Регистрация моделей в админке
 admin.add_view(UserAdmin)
 admin.add_view(DepartmentAdmin)
-admin.add_view(FlightRoutesAdmin)
 admin.add_view(PassengerAdmin)
 admin.add_view(PassengerFlightAdmin)
 admin.add_view(FlightsAdmin)
