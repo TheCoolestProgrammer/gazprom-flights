@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, Request, Depends, Form, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from src.models.passenger_flight import PassengerFlight
 from src.models.flights import Flight
 from src.database import SessionDep
@@ -8,6 +10,7 @@ from src.dependencies import get_current_user, RoleChecker
 from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender 
 from src.models.department import Department
+import datetime
 
 router = APIRouter(prefix="/dispatcher", tags=["dispatcher"])
 templates = Jinja2Templates(directory="templates")
@@ -19,52 +22,51 @@ async def dashboard(
     session: SessionDep,
     user: User = Depends(RoleChecker(Role.DISPATCHER))
     ):
-    flights = session.query(PassengerFlight).all()
-    requests = session.query(Passenger).order_by(Passenger.request_date.desc()).all()
+    # flights = session.query(Flight).filter(Flight.departure_date>datetime.date.today()).all()
+    stmt = select(Flight).where(Flight.departure_date > datetime.date.today())
+
+    # Выполняем и получаем результат
+    flights = session.execute(stmt).scalars().all()
+    requests = session.query(Passenger).filter(Passenger.done_status!=RequestStatus.CONFIRMED).order_by(Passenger.request_date.desc()).all()
     return templates.TemplateResponse(request=request, name="dispatcher/dashboard.html", context={
         "user": user,
         "requests": requests,
         "flights":flights
     })
 
-@router.get("/create/{passenger_id}", response_class=HTMLResponse)
-async def create_view(
-    request: Request,
+
+@router.post("/change_status")
+async def change_status(
     session: SessionDep,
-    passenger_id:int,
-    user: User = Depends(RoleChecker(Role.DISPATCHER))
-    ):
-    flights = session.query(Flight).all()
-    passenger = session.get(Passenger, passenger_id)
-    return templates.TemplateResponse(request=request, name="dispatcher/create.html", context={
-        "flights":flights,
-        "passenger":passenger
-    })
-
-
-@router.post("/create/{passenger_id}", response_class=HTMLResponse)
-async def create_post(
-    session: SessionDep,
-    passenger_id:int,
-    flight_id:int = Form(...),
-    place:str=Form(...),
-    user: User = Depends(RoleChecker(Role.DISPATCHER))
-    ):
-    pf = PassengerFlight(
-        flight_id=flight_id,
-        passenger_id=passenger_id,
-        place=place
-    )
-    session.add(pf)
-    session.commit()
-    return RedirectResponse(url="/dispatcher/", status_code=status.HTTP_303_SEE_OTHER)
-
-
-@router.get("/get_places/{flight_id}")
-async def get_places(
-    flight_id:int,
-    session: SessionDep,
+    flight:int = Form(...),
+    selected_ids: list[int] = Form(...),
     user: User = Depends(RoleChecker(Role.DISPATCHER))
 ):
-    occupied = session.query(PassengerFlight.place).filter(PassengerFlight.flight_id==flight_id).all()
-    return [item[0] for item in occupied]
+    print(f"Выбранные ID для обновления: {selected_ids}")
+    for i in selected_ids:
+        passenger = session.get(Passenger,i)
+        passenger.done_status=RequestStatus.CONFIRMED
+        pf = PassengerFlight(
+            passenger_id=passenger.id,
+            flight_id=flight
+        )
+        session.add(pf)
+    session.commit()
+
+    return RedirectResponse(url="/dispatcher", status_code=303)
+
+
+@router.get("/done", response_class=HTMLResponse)
+async def get_done_flights(request: Request, 
+                           session: SessionDep,
+                           user: User = Depends(RoleChecker(Role.DISPATCHER))
+                           ):
+    # Загружаем связи сразу, чтобы шаблонизатор мог к ним обращаться
+    flights_data = session.query(PassengerFlight).options(
+        joinedload(PassengerFlight.flights),
+        joinedload(PassengerFlight.passengers)
+    ).all()
+    
+    return templates.TemplateResponse(request=request, name="dispatcher/done_flights.html", context={
+        "flights": flights_data
+    })

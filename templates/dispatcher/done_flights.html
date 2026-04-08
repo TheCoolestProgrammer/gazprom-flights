@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Выполненные перелеты и пассажиры</h2>
+        <a href="/dispatcher" class="btn">Назад к заявкам</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Дата вылета</th>
+                <th>Тип ВС / № Рейса</th>
+                <th>Маршрут</th>
+                <th>Пассажир (ФИО)</th>
+                <th>Паспорт</th>
+                <th>Вес багажа</th>
+                <th>Цель поездки</th>
+                <th>ID перелета</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pf in flights %}
+            <tr>
+                <!-- Данные из модели Flight через связь .flights -->
+                <td>{{ pf.flights.departure_date.strftime('%d.%m.%Y') if pf.flights.departure_date else '-' }}</td>
+                <td>{{ pf.flights.aircraft_type }} ({{ pf.flights.flight_number }})</td>
+                <td>{{ pf.flights.route }}</td>
+                
+                <!-- Данные из модели Passenger через связь .passengers -->
+                <td>{{ pf.passengers.fullname }}</td>
+                <td>{{ pf.passengers.passport }}</td>
+                <td>{{ pf.passengers.cargo_weight }} кг</td>
+                <td>{{ pf.passengers.trip_purpose.value }}</td>
+                
+                <td><code>#{{ pf.flight_id }}</code></td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" style="text-align: center;">Данные о перелетах отсутствуют</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    tr:hover { background-color: #f9f9f9; }
+    .btn { text-decoration: none; padding: 8px 16px; background: #eee; border-radius: 4px; color: #333; }
+</style>
+{% endblock %}

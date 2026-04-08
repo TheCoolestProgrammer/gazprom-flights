@@ -3,48 +3,80 @@
 {% block content %}
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>все заявки на перевозку</h2>
+        <h2>Все заявки на перевозку</h2>
+        <!-- Кнопка для отправки формы -->
+        <a href="/dispatcher/done">выполненные заявки</a>
+        <button type="submit" form="status-form" class="btn-submit">Изменить статус выбранных</button>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Дата заявки</th>
-                <th>желаемая дата</th>
-                <th>ФИО</th>
-                <th>дата рождения</th>
-                <th>Паспорт</th>
-                <th>вес багажа</th>
-                <th>Цель</th>
-                <th>дополнительно</th>
-                <th>Статус</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for req in requests %}
-            <tr>
-                <td>{{ req.request_date }}</td>
-                <td>{{ req.planning_date }}</td>
-                <td>{{ req.fullname }}</td>
-                <td>{{ req.planning_date }}</td>
-                <td>{{ req.passport }}</td>
-                <td>{{ req.cargo_weight }}</td>
-                <td>{{ req.trip_purpose[:30] }}...</td>
-                <td>{{ req.notes }}</td>
-                <td>
-                    <span class="status-{{ req.status.name.lower() }}">
-                        {{ req.status.value }}
-                    </span>
-                </td>
-                <td><a href="create/{{req.id}}">посадить на борт</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <!-- Оборачиваем таблицу в форму -->
+    <form id="status-form" action="/dispatcher/change_status" method="POST">
+        <select name="flight">
+            {%for i in flights%}
+                <option value="{{i.id}}">{{i.aircraft_type}}-{{i.flight_number}}-{{i.route}}</option>
+            {%endfor%}
+        </select>
+        <table>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="select-all"></th> <!-- Чекбокс "Выбрать все" -->
+                    <th>id</th>
+                    <th>Дата заявки</th>
+                    <th>желаемая дата</th>
+                    <th>ФИО</th>
+                    <th>Паспорт</th>
+                    <th>вес багажа</th>
+                    <th>откуда</th>
+                    <th>куда</th>
+                    <th>ГТЮ</th>
+                    <th>Статус директора</th>
+                    <th>Статус диспетчера</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>
+                        <!-- value="{{ req.id }}" — это ID заявки из вашей БД -->
+                        <input type="checkbox" name="selected_ids" value="{{ req.id }}">
+                    </td>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ req.request_date }}</td>
+                    <td>{{ req.planning_date }}</td>
+                    <td>{{ req.fullname }}</td>
+                    <td>{{ req.passport }}</td>
+                    <td>{{ req.cargo_weight }}</td>
+                    <td>{{ req.flight_from.name }}</td>
+                    <td>{{ req.flight_to.name }}</td>
+                    <td>{{ req.gtu_relation.value }}</td>
+                    <td>
+                        <span class="status-{{ req.department_director_status.name.lower() }}">
+                            {{ req.department_director_status.value }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-{{ req.main_dispatcher_status.name.lower() }}">
+                            {{ req.main_dispatcher_status.value }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
 </div>
 
-<div class="card">
+<script>
+    // Скрипт для работы чекбокса "Выбрать все"
+    document.getElementById('select-all').onclick = function() {
+        var checkboxes = document.getElementsByName('selected_ids');
+        for (var checkbox of checkboxes) {
+            checkbox.checked = this.checked;
+        }
+    }
+</script>
+{% endblock %}
+<!-- <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2>перелеты и пассажиры</h2>
     </div>
@@ -75,6 +107,5 @@
             {% endfor %}
         </tbody>
     </table>
-</div>
+</div> -->
 
-{% endblock %}
