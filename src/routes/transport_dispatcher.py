@@ -7,6 +7,7 @@ from src.dependencies import get_current_user, RoleChecker
 from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
 from src.models.department import Department
+from src.models.airport import Airport
 
 router = APIRouter(prefix="/transport_dispatcher", tags=["transport_dispatcher"])
 templates = Jinja2Templates(directory="templates")
@@ -32,9 +33,11 @@ async def create_form(
     ):
     # flight_routes = session.query(Department).all()
     departments = session.query(Department).all()
+    airports = session.query(Airport).all()
     return templates.TemplateResponse(request=request, name="transport_dispatcher/create.html", context={
         "user": user,
         "departments": departments,
+        "airports":airports,
         # "flight_routes":flight_routes
         "TripPurpose":TripPurpose,
         "GTURelation":GTURelation
@@ -87,11 +90,12 @@ async def edit_form(
     passenger = session.query(Passenger).filter(Passenger.id==passenger_id).first()
     departments = session.query(Department).all()
     # flight_routes = session.query(FlightRoute).all()
-
+    airports = session.query(Airport).all() 
     return templates.TemplateResponse(request=request, name="transport_dispatcher/edit.html", context={
         "user": user,
         "departments": departments,
         "passenger":passenger,
+        "airports":airports,
         # "flight_routes":flight_routes
         "TripPurpose":TripPurpose,
         "GTURelation":GTURelation

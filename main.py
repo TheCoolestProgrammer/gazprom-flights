@@ -5,7 +5,7 @@ from src.database import create_db_and_tables, engine
 from contextlib import asynccontextmanager
 from src.routes import auth, transport_dispatcher, department_director, dispatcher, main_dispatcher
 from src.dependencies import get_current_user
-from src.models import department, passenger, flights, passenger_flight, user
+from src.models import department, passenger, flights, passenger_flight, user, airport
 from sqladmin import Admin
 from src.admin.admin_auth import admin_auth_backend
 from src.admin.admin_views import (

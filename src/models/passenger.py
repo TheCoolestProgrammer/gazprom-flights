@@ -49,9 +49,9 @@ class Passenger(Base):
     birthdate = Column(Date, nullable=False)
     gender = Column(Enum(Gender), nullable=False)
     passport = Column(BigInteger, nullable=False)
-    flight_from_id = Column(Integer, ForeignKey("departments.id"))
+    flight_from_id = Column(Integer, ForeignKey("airports.id"))
     # flight_route_id = Column(Integer, ForeignKey("flight_routes.id"))
-    flight_to_id = Column(Integer, ForeignKey("departments.id"))
+    flight_to_id = Column(Integer, ForeignKey("airports.id"))
     department_id = Column(Integer, ForeignKey("departments.id"))
 
     gtu_relation = Column(Enum(GTURelation), default=GTURelation.GTU_EMPLOYEE)
@@ -66,8 +66,8 @@ class Passenger(Base):
     
     created_by = Column(Integer, ForeignKey("users.id"))
 
-    flight_from = relationship("Department",foreign_keys=[flight_from_id], back_populates="passengers_departing")
-    flight_to = relationship("Department",foreign_keys=[flight_to_id], back_populates="passengers_arriving")
+    flight_from = relationship("Airport",foreign_keys=[flight_from_id], back_populates="passengers_departing")
+    flight_to = relationship("Airport",foreign_keys=[flight_to_id], back_populates="passengers_arriving")
     departments = relationship("Department",foreign_keys=[department_id], back_populates="passengers_belong")
 
     passenger_flights = relationship("PassengerFlight",back_populates='passengers')

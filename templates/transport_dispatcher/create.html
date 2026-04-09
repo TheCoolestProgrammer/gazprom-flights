@@ -29,7 +29,7 @@
             <label style="display:block; margin-bottom:5px;">место отправления</label>
             <select name="flight_from" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите подразделение</option>
-                {% for dept in departments %}
+                {% for dept in airports %}
                     <option value="{{ dept.id }}">{{ dept.name }}</option>
                 {% endfor %}
             </select>
@@ -56,7 +56,7 @@
             <label style="display:block; margin-bottom:5px;">точка назначения</label>
             <select name="flight_to" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите направление</option>
-                {% for route in departments %}
+                {% for route in airports %}
                     <option value="{{ route.id }}">{{ route.name }}</option>
                 {% endfor %}
             </select>

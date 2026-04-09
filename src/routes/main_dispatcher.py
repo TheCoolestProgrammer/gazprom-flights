@@ -5,6 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, Response, status,UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from src.models.airport import Airport
 from src.crud.flight import create_flights_bulk
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
@@ -48,11 +49,13 @@ async def edit_form(
     passenger = session.query(Passenger).filter(Passenger.id==passenger_id).first()
     departments = session.query(Department).all()
     # flight_routes = session.query(FlightRoute).all()
-
+    airports = session.query(Airport).all()
+    print(airports)
     return templates.TemplateResponse(request=request, name="main_dispatcher/edit.html", context={
         "user": user,
         "departments": departments,
         "passenger":passenger,
+        "airports":airports,
         # "flight_routes":flight_routes
         "TripPurpose":TripPurpose,
         "GTURelation":GTURelation
