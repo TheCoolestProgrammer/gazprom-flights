@@ -41,3 +41,6 @@ class FlightCreateForm(BaseModel):
     
     class Config:
         populate_by_name = True  # позво
+
+class SelectedFlightsRequest(BaseModel):
+    flight_ids: List[int]

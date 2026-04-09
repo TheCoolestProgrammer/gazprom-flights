@@ -12,7 +12,7 @@ from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
 from src.models.department import Department
 from src.models.flights import Flight
-from src.schemas.flight import FlightCreate, FlightCreateForm, FlightResponse, FlightParseResponse
+from src.schemas.flight import FlightCreate, FlightCreateForm, FlightResponse, FlightParseResponse, SelectedFlightsRequest
 from src.parsers.docs_parser import parse_flight_docx
 from fastapi.responses import FileResponse
 from docx import Document
@@ -333,4 +333,108 @@ def generate_flight_docx(flight: Flight, gzp: str) -> bytes:
     buffer.seek(0)
     return buffer.getvalue()
 
+
+@router.post("/download-selected")
+async def download_selected_flights(
+    request: SelectedFlightsRequest,
+    db: SessionDep
+):
+    """
+    Скачивает выбранные рейсы в одном DOCX-файле.
+    """
+    if not request.flight_ids:
+        raise HTTPException(status_code=400, detail="Не выбрано ни одного рейса")
+    
+    # Получаем рейсы из БД
+    flights = db.query(Flight).filter(Flight.id.in_(request.flight_ids)).order_by(Flight.departure_date, Flight.departure_time).all()
+    
+    if not flights:
+        raise HTTPException(status_code=404, detail="Рейсы не найдены")
+    
+    # Генерируем DOCX со всеми рейсами
+    docx_bytes = generate_multiple_flights_docx(flights)
+    
+    # Генерируем имя файла с датами
+    dates = set(f.departure_date for f in flights)
+    if len(dates) == 1:
+        filename = f"flights_{list(dates)[0]}.docx"
+    else:
+        filename = f"flights_{min(dates)}_{max(dates)}.docx"
+    
+    return Response(
+        content=docx_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+def generate_multiple_flights_docx(flights: list[Flight]) -> bytes:
+    """
+    Генерирует DOCX-документ с несколькими рейсами.
+    """
+    from docx.shared import Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    
+    doc = Document()
+    
+    # Заголовок
+    title = doc.add_paragraph("Заявка на выполнение полетов")
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title.runs[0].bold = True
+    title.runs[0].font.size = Pt(16)
+    
+    doc.add_paragraph()  # Пустая строка
+    
+    # Группируем рейсы по датам
+    from collections import defaultdict
+    flights_by_date = defaultdict(list)
+    for flight in flights:
+        flights_by_date[flight.departure_date].append(flight)
+    
+    # Для каждой даты создаём раздел
+    for i, (date, date_flights) in enumerate(sorted(flights_by_date.items())):
+        if i > 0:
+            doc.add_page_break()
+        
+        # Преобразуем дату в русский формат
+        months_ru = {
+            1: "января", 2: "февраля", 3: "марта", 4: "апреля",
+            5: "мая", 6: "июня", 7: "июля", 8: "августа",
+            9: "сентября", 10: "октября", 11: "ноября", 12: "декабря"
+        }
+        weekday_ru = {
+            0: "понедельник", 1: "вторник", 2: "среда", 3: "четверг",
+            4: "пятница", 5: "суббота", 6: "воскресенье"
+        }
+        weekday_name = weekday_ru[date.weekday()]
+        date_str = f"на «{date.day}» {months_ru[date.month]} {date.year}г {weekday_name}"
+        
+        date_paragraph = doc.add_paragraph(date_str)
+        date_paragraph.runs[0].bold = True
+        date_paragraph.runs[0].font.size = Pt(14)
+        
+        doc.add_paragraph()  # Пустая строка
+        
+        # Добавляем каждый рейс
+        for idx, flight in enumerate(date_flights, 1):
+            # Получаем ГЗП (если нет в модели, можно добавить или передавать отдельно)
+            # Для этого нужно добавить поле gzp в модель Flight
+            # gzp = getattr(flight, 'gzp', '_____')
+            
+            flight_line = (f"{idx}. {flight.aircraft_type} {flight.flight_number} ГЗП "
+                          f"время вылета {flight.departure_time.strftime('%H:%M')} "
+                          f"кол-во кресел {flight.place_number}")
+            doc.add_paragraph(flight_line)
+            
+            # Маршрут
+            doc.add_paragraph(f"Маршрут: {flight.route}")
+            
+            # Добавляем пустую строку между рейсами, если не последний
+            if idx < len(date_flights):
+                doc.add_paragraph()
+    
+    # Сохраняем в байты
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()
 

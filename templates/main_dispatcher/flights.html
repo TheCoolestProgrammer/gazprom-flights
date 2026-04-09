@@ -4,17 +4,34 @@
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2>Управление рейсами</h2>
-        <button type="button" 
-                onclick="openCreateModal()" 
-                style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
-            ✈️ Создать новый рейс
-        </button>
+        <div>
+            <button type="button" 
+                    onclick="openCreateModal()" 
+                    style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px;">
+                ✈️ Создать новый рейс
+            </button>
+            <button type="button" 
+                    id="downloadSelectedBtn" 
+                    onclick="downloadSelected()" 
+                    style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; display: none;">
+                📥 Скачать выбранные (0)
+            </button>
+        </div>
     </div>
 
-    <!-- Таблица рейсов -->
+    <!-- Кнопки для массового выбора -->
+    <div style="margin-bottom: 15px;">
+        <button type="button" onclick="selectAll()" style="background: #6c757d; color: white; padding: 5px 15px; border: none; border-radius: 4px; cursor: pointer;">Выбрать все</button>
+        <button type="button" onclick="deselectAll()" style="background: #6c757d; color: white; padding: 5px 15px; border: none; border-radius: 4px; cursor: pointer;">Снять выделение</button>
+    </div>
+
+    <!-- Таблица рейсов с чекбоксами -->
     <table style="width: 100%; border-collapse: collapse;">
         <thead>
             <tr style="background: #f2f2f2;">
+                <th style="padding: 10px; border: 1px solid #ddd; width: 30px;">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                </th>
                 <th style="padding: 10px; border: 1px solid #ddd;">ID</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Тип ВС</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Борт №</th>
@@ -22,12 +39,15 @@
                 <th style="padding: 10px; border: 1px solid #ddd;">Время</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Кресел</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Маршрут</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">DOCX</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Действия</th>
             </tr>
         </thead>
         <tbody>
             {% for flight in flights %}
             <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                    <input type="checkbox" class="flight-checkbox" data-flight-id="{{ flight.id }}" data-flight-number="{{ flight.flight_number }}" data-aircraft-type="{{ flight.aircraft_type }}" data-gzp="{{ flight.gzp }}" data-departure-date="{{ flight.departure_date }}" data-departure-time="{{ flight.departure_time }}" data-place-number="{{ flight.place_number }}" data-route="{{ flight.route }}">
+                </td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.id }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.aircraft_type }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.flight_number }}</td>
@@ -36,7 +56,7 @@
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.place_number }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.route }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">
-                    <a href="/main_dispatcher/download/{{ flight.id }}" style="color: #007bff; text-decoration: none;">📄 Скачать</a>
+                    <a href="/main_dispatcher/download/{{ flight.id }}" style="color: #007bff; text-decoration: none; margin-right: 10px;">📄 Скачать</a>
                 </td>
             </tr>
             {% endfor %}
@@ -100,14 +120,124 @@
 </div>
 
 <script>
-// Открыть модальное окно
+// Хранение выбранных рейсов
+let selectedFlights = new Set();
+
+// Обновление счетчика выбранных рейсов
+function updateSelectedCount() {
+    const count = selectedFlights.size;
+    const btn = document.getElementById('downloadSelectedBtn');
+    if (count > 0) {
+        btn.style.display = 'inline-block';
+        btn.textContent = `📥 Скачать выбранные (${count})`;
+    } else {
+        btn.style.display = 'none';
+    }
+    
+    // Обновляем состояние чекбокса "Выбрать все"
+    const allCheckboxes = document.querySelectorAll('.flight-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (allCheckboxes.length > 0) {
+        selectAllCheckbox.checked = allCheckboxes.length === selectedFlights.size;
+        selectAllCheckbox.indeterminate = selectedFlights.size > 0 && selectedFlights.size < allCheckboxes.length;
+    }
+}
+
+// Обработчик изменения чекбокса
+function setupCheckboxListeners() {
+    const checkboxes = document.querySelectorAll('.flight-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const flightId = parseInt(this.dataset.flightId);
+            if (this.checked) {
+                // Сохраняем все данные рейса
+                selectedFlights.add(flightId);
+            } else {
+                selectedFlights.delete(flightId);
+            }
+            updateSelectedCount();
+        });
+    });
+}
+
+// Выбрать все
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.flight-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+        const flightId = parseInt(checkbox.dataset.flightId);
+        selectedFlights.add(flightId);
+    });
+    updateSelectedCount();
+}
+
+// Снять выделение
+function deselectAll() {
+    const checkboxes = document.querySelectorAll('.flight-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+        const flightId = parseInt(checkbox.dataset.flightId);
+        selectedFlights.delete(flightId);
+    });
+    updateSelectedCount();
+}
+
+// Переключить "Выбрать все"
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    if (selectAllCheckbox.checked) {
+        selectAll();
+    } else {
+        deselectAll();
+    }
+}
+
+// Скачать выбранные рейсы
+async function downloadSelected() {
+    if (selectedFlights.size === 0) {
+        alert('Пожалуйста, выберите хотя бы один рейс');
+        return;
+    }
+    
+    const flightIds = Array.from(selectedFlights);
+    
+    try {
+        const response = await fetch('/main_dispatcher/download-selected', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ flight_ids: flightIds })
+        });
+        
+        if (response.ok) {
+            // Скачиваем файл
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `flights_${new Date().toISOString().slice(0,19)}.docx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } else {
+            const error = await response.json();
+            alert('Ошибка при скачивании: ' + (error.detail || 'Неизвестная ошибка'));
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка при скачивании');
+    }
+}
+
+// Функции для модального окна
 function openCreateModal() {
     document.getElementById('createModal').style.display = 'block';
     document.getElementById('createFlightForm').reset();
     document.getElementById('createResult').style.display = 'none';
 }
 
-// Закрыть модальное окно
 function closeCreateModal() {
     document.getElementById('createModal').style.display = 'none';
 }
@@ -119,10 +249,11 @@ window.onclick = function(event) {
         closeCreateModal();
     }
 }
+
+// Обработка отправки формы
 document.getElementById('createFlightForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    // Явно собираем данные с правильными именами полей
     const formData = {
         departure_date: document.getElementById('departure_date').value,
         aircraft_type: document.getElementById('aircraft_type').value,
@@ -132,9 +263,6 @@ document.getElementById('createFlightForm').addEventListener('submit', async fun
         place_number: parseInt(document.getElementById('place_number').value),
         route: document.getElementById('route').value
     };
-    
-    // Отладка: проверим, что отправляем
-    console.log('Отправляемые данные:', formData);
     
     const submitBtn = this.querySelector('button[type="submit"]');
     const resultDiv = document.getElementById('createResult');
@@ -146,9 +274,7 @@ document.getElementById('createFlightForm').addEventListener('submit', async fun
     try {
         const response = await fetch('/main_dispatcher/create-from-form', {
             method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(formData)
         });
         
@@ -178,6 +304,17 @@ document.getElementById('createFlightForm').addEventListener('submit', async fun
         submitBtn.disabled = false;
     }
 });
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    setupCheckboxListeners();
+    updateSelectedCount();
+});
+
+// Функция редактирования рейса (заглушка)
+function editFlight(flightId) {
+    alert(`Редактирование рейса ${flightId} будет добавлено позже`);
+}
 </script>
 
 <style>
@@ -193,6 +330,16 @@ th, td {
 }
 th {
     background-color: #f4f4f4;
+}
+.flight-checkbox {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+#selectAllCheckbox {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
 }
 </style>
 {% endblock %}
