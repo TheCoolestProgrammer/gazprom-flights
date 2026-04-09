@@ -17,6 +17,16 @@
                    style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"
                    value="{{passenger.fullname}}">
         </div>
+        <!-- принадлежит филиалу -->
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">принадлежит филиалу</label>
+            <select name="department_id" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="{{passenger.departments.id}}"  selected>{{passenger.departments.name}}</option>
+                {% for route in departments %}
+                    <option value="{{ route.id }}">{{ route.name }}</option>
+                {% endfor %}
+            </select>
+        </div>  
         <!-- Маршрут перелета -->
         <div style="grid-column: span 2;">
             <label style="display:block; margin-bottom:5px;">точка назначения</label>

@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+from typing import Optional
 
 from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, Response, status,UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -73,7 +74,7 @@ async def edit_request(
     cargo_weight:float = Form(...),
     gtu_relation:GTURelation = Form(...),
     department_id:int = Form(...),
-    notes:str = Form(...),
+    notes:Optional[str] = Form(None),
     user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
 ):
     passenger = session.get(Passenger, passenger_id)
@@ -91,7 +92,8 @@ async def edit_request(
     passenger.cargo_weight=cargo_weight
     passenger.gtu_relation=gtu_relation
     passenger.department_id = department_id
-    passenger.notes=notes
+    if notes:
+        passenger.notes=notes
 
     session.commit()
     return RedirectResponse(url="/main_dispatcher/", status_code=303)
