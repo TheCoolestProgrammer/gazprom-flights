@@ -1,4 +1,7 @@
-from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, status,UploadFile, File
+from datetime import datetime
+import os
+
+from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, Response, status,UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from src.crud.flight import create_flights_bulk
@@ -8,8 +11,13 @@ from src.dependencies import get_current_user, RoleChecker
 from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
 from src.models.department import Department
-from src.schemas.flight import FlightCreate, FlightResponse, FlightParseResponse
+from src.models.flights import Flight
+from src.schemas.flight import FlightCreate, FlightCreateForm, FlightResponse, FlightParseResponse
 from src.parsers.docs_parser import parse_flight_docx
+from fastapi.responses import FileResponse
+from docx import Document
+from io import BytesIO
+import tempfile
 
 router = APIRouter(prefix="/main_dispatcher", tags=["main_dispatcher"])
 templates = Jinja2Templates(directory="templates")
@@ -193,3 +201,136 @@ async def upload_flights_docx(
             status_code=500,
             detail=f"Внутренняя ошибка сервера при обработке файла: {str(e)}"
         )
+
+@router.get("/flights", response_class=HTMLResponse)
+async def flights_page(request: Request, db: SessionDep):
+    flights = db.query(Flight).order_by(Flight.departure_date.desc()).all()
+    return templates.TemplateResponse(request=request, name="main_dispatcher/flights.html", context={
+        "flights":flights
+    })
+
+@router.post("/create-from-form", response_model=dict)
+async def create_flight_from_form(
+    flight_data: FlightCreateForm,  # Используем Pydantic модель
+    db: SessionDep
+):
+    """
+    Создаёт рейс из формы, сохраняет в БД и генерирует DOCX-файл.
+    """
+    try:
+        # Логируем полученные данные для отладки
+        print(f"Получены данные: {flight_data}")
+        
+        # Проверяем, нет ли уже рейса с таким же номером на эту дату
+        existing_flight = db.query(Flight).filter(
+            Flight.flight_number == flight_data.flight_number,
+            Flight.departure_date == flight_data.departure_date
+        ).first()
+        
+        if existing_flight:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Рейс с номером {flight_data.flight_number} на дату {flight_data.departure_date} уже существует"
+            )
+        
+        # Сохраняем в БД
+        new_flight = Flight(
+            aircraft_type=flight_data.aircraft_type,
+            flight_number=flight_data.flight_number,
+            departure_date=flight_data.departure_date,
+            departure_time=flight_data.departure_time,
+            place_number=flight_data.place_number,
+            route=flight_data.route
+        )
+        db.add(new_flight)
+        db.commit()
+        db.refresh(new_flight)
+        
+        # Генерируем DOCX
+        docx_bytes = generate_flight_docx(new_flight, flight_data.gzp)
+        
+        # Сохраняем файл
+        os.makedirs("generated_docx", exist_ok=True)
+        filename = f"flight_{new_flight.id}_{new_flight.departure_date}.docx"
+        filepath = os.path.join("generated_docx", filename)
+        with open(filepath, "wb") as f:
+            f.write(docx_bytes)
+        
+        return {"status": "success", "flight_id": new_flight.id, "file": filename}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        print(f"Ошибка: {str(e)}")  # Логируем ошибку
+        raise HTTPException(status_code=500, detail=f"Ошибка при создании рейса: {str(e)}")
+
+@router.get("/download/{flight_id}")
+async def download_flight_docx(flight_id: int, db: SessionDep):
+    """
+    Скачивает сгенерированный DOCX-файл для рейса.
+    """
+    flight = db.query(Flight).filter(Flight.id == flight_id).first()
+    if not flight:
+        raise HTTPException(status_code=404, detail="Рейс не найден")
+    
+    # Генерируем заново или берём сохранённый
+    docx_bytes = generate_flight_docx(flight, "")
+    
+    # Отдаём файл
+    return Response(
+        content=docx_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename=flight_{flight_id}.docx"}
+    )
+
+@router.get("/list", response_model=list[FlightResponse])
+async def list_flights(db: SessionDep):
+    """Список всех рейсов (для отображения в таблице)"""
+    flights = db.query(Flight).order_by(Flight.departure_date.desc(), Flight.departure_time).all()
+    return flights
+
+def generate_flight_docx(flight: Flight, gzp: str) -> bytes:
+    """
+    Генерирует DOCX-документ в формате заявки на выполнение полётов.
+    """
+    doc = Document()
+    
+    # Заголовок
+    title = doc.add_paragraph("Заявка на выполнение полетов")
+    title.runs[0].bold = True
+    
+    doc.add_paragraph()  # Пустая строка
+    
+    # Дата (преобразуем русский месяц)
+    months_ru = {
+        1: "января", 2: "февраля", 3: "марта", 4: "апреля",
+        5: "мая", 6: "июня", 7: "июля", 8: "августа",
+        9: "сентября", 10: "октября", 11: "ноября", 12: "декабря"
+    }
+    weekday_ru = {
+        0: "понедельник", 1: "вторник", 2: "среда", 3: "четверг",
+        4: "пятница", 5: "суббота", 6: "воскресенье"
+    }
+    weekday_name = weekday_ru[flight.departure_date.weekday()]
+    date_str = f"на «{flight.departure_date.day}» {months_ru[flight.departure_date.month]} {flight.departure_date.year}г {weekday_name}"
+    doc.add_paragraph(date_str)
+    
+    doc.add_paragraph()  # Пустая строка
+    
+    # Рейс (номер рейса используем как есть)
+    flight_line = (f"1. {flight.aircraft_type} {flight.flight_number} ГЗП {gzp} "
+                   f"время вылета {flight.departure_time.strftime('%H:%M')} "
+                   f"кол-во кресел {flight.place_number}")
+    doc.add_paragraph(flight_line)
+    
+    # Маршрут
+    doc.add_paragraph(f"Маршрут: {flight.route}")
+    
+    # Сохраняем в байты
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()
+
+
