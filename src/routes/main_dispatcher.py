@@ -89,7 +89,7 @@ async def edit_request(
     passenger.gender=gender
     passenger.trip_purpose=trip_purpose
     passenger.status=RequestStatus.PENDING
-    passenger.created_by=user.id
+    # passenger.created_by=user.id
     passenger.planning_date=planning_date
     passenger.flight_to_id=flight_to
     passenger.cargo_weight=cargo_weight

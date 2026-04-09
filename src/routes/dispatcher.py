@@ -5,6 +5,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
+from src.models.airport import Airport
 from src.models.passenger_flight import PassengerFlight
 from src.models.flights import Flight
 from src.database import SessionDep
@@ -47,10 +48,10 @@ async def dashboard(
             pass  # Игнорируем неверный формат даты
     
     if flight_from:
-        query = query.join(Passenger.flight_from).filter(Department.name == flight_from)
+        query = query.join(Passenger.flight_from).filter(Airport.name == flight_from)
     
     if flight_to:
-        query = query.join(Passenger.flight_to).filter(Department.name == flight_to)
+        query = query.join(Passenger.flight_to).filter(Airport.name == flight_to)
     
     if director_status:
         query = query.filter(Passenger.department_director_status == director_status)
