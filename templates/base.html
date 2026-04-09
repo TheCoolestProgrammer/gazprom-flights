@@ -16,6 +16,41 @@
         .status-pending { color: orange; font-weight: bold; }
         .status-confirmed { color: green; font-weight: bold; }
         .status-rejected { color: red; font-weight: bold; }
+        .table-wrapper {
+        overflow-x: auto;
+        margin-top: 1rem;
+        border-radius: 8px;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 800px; /* Минимальная ширина, после которой появляется скролл */
+    }
+    
+    /* Для более компактного отображения на маленьких экранах */
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+        
+        .card {
+            padding: 1rem;
+        }
+        
+        th, td {
+            padding: 8px;
+            font-size: 14px;
+        }
+    }
+    
+    /* Фиксируем шапку таблицы при скролле (опционально) */
+    thead th {
+        position: sticky;
+        top: 0;
+        background: white;
+        z-index: 10;
+    }
     </style>
 </head>
 <body>

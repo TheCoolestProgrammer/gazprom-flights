@@ -6,7 +6,7 @@
         <h2>Мои заявки на перевозку</h2>
         <a href="/transport_dispatcher/create" class="btn btn-primary">+ Новая заявка</a>
     </div>
-
+    <div class="table-wrapper">
     <table>
         <thead>
             <tr>
@@ -59,6 +59,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
 </div>
 <script>
 async function deletePassenger(passengerId) {
