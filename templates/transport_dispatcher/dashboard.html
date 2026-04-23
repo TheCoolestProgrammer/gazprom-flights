@@ -3,7 +3,7 @@
 {% block content %}
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2>Мои заявки на перевозку</h2>
+        <h2>начальник структурного подразделения</h2>
         <a href="/transport_dispatcher/create" class="btn btn-primary">+ Новая заявка</a>
     </div>
     <div class="table-wrapper">
@@ -26,14 +26,14 @@
         <tbody>
             {% for req in requests %}
             <tr>
-                <td>{{ req.request_date }}</td>
+                <td>{{ req.request_date|format_date_ru }}</td>
                 <td>{{ req.fullname }}</td>
                 <td>{{ req.passport }}</td>
                 <td>{{ req.trip_purpose.value}}</td>
                 <td>{{ req.gtu_relation.value }}</td>
                 <td>{{ req.flight_from.name}}</td>
                 <td>{{ req.flight_to.name}}</td>
-                <td>{{ req.planning_date }}</td>
+                <td>{{ req.planning_date|format_date_ru }}</td>
                 <td>
                     <span class="status-{{ req.department_director_status.name.lower() }}">
                         {{ req.department_director_status.value }}

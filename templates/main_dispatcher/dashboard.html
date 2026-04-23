@@ -32,14 +32,14 @@
         <tbody>
             {% for req in requests %}
             <tr>
-                <td>{{ req.request_date }}</td>
+                <td>{{ req.request_date|format_date_ru }}</td>
                 <td>{{ req.fullname }}</td>
                 <td>{{ req.passport }}</td>
                 <td>{{ req.trip_purpose.value}}</td>
                 <td>{{ req.gtu_relation.value }}</td>
                 <td>{{ req.flight_from.name}}</td>
                 <td>{{ req.flight_to.name}}</td>
-                <td>{{ req.planning_date }}</td>
+                <td>{{ req.planning_date|format_date_ru }}</td>
                 <td>
                     <span class="status-{{ req.department_director_status.name.lower() }}">
                         {{ req.department_director_status.value }}

@@ -2,7 +2,6 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request, Depends, Form, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from src.models.airport import Airport
@@ -13,10 +12,10 @@ from src.dependencies import get_current_user, RoleChecker
 from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender 
 from src.models.department import Department
+from src.templates_config import templates
 import datetime
 
 router = APIRouter(prefix="/dispatcher", tags=["dispatcher"])
-templates = Jinja2Templates(directory="templates")
 
 
 

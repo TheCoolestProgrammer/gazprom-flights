@@ -101,8 +101,8 @@
                             <input type="checkbox" name="selected_ids" value="{{ req.id }}">
                         </td>
                         <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">{{ loop.index }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.request_date }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.planning_date }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.request_date|format_date_ru }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.planning_date|format_date_ru }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.fullname }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.passport }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.cargo_weight }}</td>

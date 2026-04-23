@@ -4,7 +4,6 @@ from typing import Optional
 
 from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, Response, status,UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from src.models.airport import Airport
 from src.crud.flight import create_flights_bulk
 from src.database import SessionDep
@@ -16,13 +15,11 @@ from src.models.department import Department
 from src.models.flights import Flight
 from src.schemas.flight import FlightCreate, FlightCreateForm, FlightResponse, FlightParseResponse, SelectedFlightsRequest
 from src.parsers.docs_parser import parse_flight_docx
-from fastapi.responses import FileResponse
 from docx import Document
 from io import BytesIO
-import tempfile
+from src.templates_config import templates
 
 router = APIRouter(prefix="/main_dispatcher", tags=["main_dispatcher"])
-templates = Jinja2Templates(directory="templates")
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -307,18 +304,13 @@ def generate_flight_docx(flight: Flight, gzp: str) -> bytes:
     
     doc.add_paragraph()  # Пустая строка
     
-    # Дата (преобразуем русский месяц)
-    months_ru = {
-        1: "января", 2: "февраля", 3: "марта", 4: "апреля",
-        5: "мая", 6: "июня", 7: "июля", 8: "августа",
-        9: "сентября", 10: "октября", 11: "ноября", 12: "декабря"
-    }
+    # Дата (преобразуем в русский формат с днём недели)
     weekday_ru = {
         0: "понедельник", 1: "вторник", 2: "среда", 3: "четверг",
         4: "пятница", 5: "суббота", 6: "воскресенье"
     }
     weekday_name = weekday_ru[flight.departure_date.weekday()]
-    date_str = f"на «{flight.departure_date.day}» {months_ru[flight.departure_date.month]} {flight.departure_date.year}г {weekday_name}"
+    date_str = f"{flight.departure_date.day:02d}.{flight.departure_date.month:02d}.{flight.departure_date.year} {weekday_name}"
     doc.add_paragraph(date_str)
     
     doc.add_paragraph()  # Пустая строка
@@ -400,18 +392,13 @@ def generate_multiple_flights_docx(flights: list[Flight]) -> bytes:
         if i > 0:
             doc.add_page_break()
         
-        # Преобразуем дату в русский формат
-        months_ru = {
-            1: "января", 2: "февраля", 3: "марта", 4: "апреля",
-            5: "мая", 6: "июня", 7: "июля", 8: "августа",
-            9: "сентября", 10: "октября", 11: "ноября", 12: "декабря"
-        }
+        # Преобразуем дату в русский формат с днём недели
         weekday_ru = {
             0: "понедельник", 1: "вторник", 2: "среда", 3: "четверг",
             4: "пятница", 5: "суббота", 6: "воскресенье"
         }
         weekday_name = weekday_ru[date.weekday()]
-        date_str = f"на «{date.day}» {months_ru[date.month]} {date.year}г {weekday_name}"
+        date_str = f"{date.day:02d}.{date.month:02d}.{date.year} {weekday_name}"
         
         date_paragraph = doc.add_paragraph(date_str)
         date_paragraph.runs[0].bold = True

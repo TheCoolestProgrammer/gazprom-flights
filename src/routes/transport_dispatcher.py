@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request, Depends, Form, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
 # from src.models.flight_route import FlightRoute
@@ -8,9 +7,9 @@ from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
 from src.models.department import Department
 from src.models.airport import Airport
+from src.templates_config import templates
 
 router = APIRouter(prefix="/transport_dispatcher", tags=["transport_dispatcher"])
-templates = Jinja2Templates(directory="templates")
 
 
 @router.get("/", response_class=HTMLResponse)

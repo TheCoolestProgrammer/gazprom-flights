@@ -24,7 +24,7 @@
             {% for pf in flights %}
             <tr>
                 <!-- Данные из модели Flight через связь .flights -->
-                <td>{{ pf.flights.departure_date.strftime('%d.%m.%Y') if pf.flights.departure_date else '-' }}</td>
+                <td>{{ pf.flights.departure_date|format_date_ru }}</td>
                 <td>{{ pf.flights.aircraft_type }} ({{ pf.flights.flight_number }})</td>
                 <td>{{ pf.flights.route }}</td>
                 

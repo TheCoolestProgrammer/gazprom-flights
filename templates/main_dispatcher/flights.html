@@ -53,7 +53,7 @@
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.id }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.aircraft_type }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.flight_number }}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.departure_date }}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.departure_date|format_date_ru }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.departure_time }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.place_number }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.route }}</td>
