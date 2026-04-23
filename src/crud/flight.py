@@ -10,7 +10,8 @@ def create_flight(db: Session, flight: FlightCreate):
         departure_date=flight.departure_date,
         departure_time=flight.departure_time,
         place_number=flight.place_number,
-        route=flight.route
+        route=flight.route,
+        pilot_id=flight.pilot_id
     )
     db.add(db_flight)
     db.commit()
@@ -26,7 +27,8 @@ def create_flights_bulk(db: Session, flights: list[FlightCreate]):
             departure_date=flight.departure_date,
             departure_time=flight.departure_time,
             place_number=flight.place_number,
-            route=flight.route
+            route=flight.route,
+            pilot_id=flight.pilot_id
         )
         db.add(db_flight)
         db_flights.append(db_flight)

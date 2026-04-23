@@ -10,6 +10,7 @@ class FlightCreate(BaseModel):
     departure_time: time
     place_number: int
     route: str
+    pilot_id: Optional[int] = None
 
 class FlightResponse(BaseModel):
     id: int
@@ -19,6 +20,7 @@ class FlightResponse(BaseModel):
     departure_time: time
     place_number: int
     route: str
+    pilot_id: Optional[int] = None
     
     class Config:
         from_attributes = True
@@ -38,6 +40,7 @@ class FlightCreateForm(BaseModel):
     departure_time: time = Field(..., alias="departure_time")
     place_number: int = Field(..., alias="place_number")
     route: str = Field(..., alias="route")
+    pilot_id: Optional[int] = Field(None, alias="pilot_id")
     
     class Config:
         populate_by_name = True  # позво

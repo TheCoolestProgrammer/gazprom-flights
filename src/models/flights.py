@@ -12,12 +12,14 @@ class Flight(Base):
     departure_date = Column(Date)
     departure_time = Column(Time)
     place_number = Column(Integer)
-    route=Column(String)
+    route = Column(String)
+    pilot_id = Column(Integer, ForeignKey("pilots.id"), nullable=True)
     # flight_route_id = Column(Integer, ForeignKey("flight_routes.id"))
     # начальная и конечная точка - 2 ключа на филиалы
     # flight_date = Column(Date, nullable=False)
 
-    passenger_flights = relationship("PassengerFlight",back_populates="flights")
+    passenger_flights = relationship("PassengerFlight", back_populates="flights")
+    pilot = relationship("Pilot", back_populates="flights")
     # flight_routes = relationship("FlightRoute", back_populates="flights")
     def __str__(self):
         return self.route

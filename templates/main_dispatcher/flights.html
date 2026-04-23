@@ -111,6 +111,16 @@
                 <small>Формат: точка1-точка2-...-тип_полёта (пасс, груз, пасс+груз)</small>
             </div>
             
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Пилот (КВС):</label>
+                <select id="pilot_id" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- Выберите пилота --</option>
+                    {% for pilot in pilots %}
+                    <option value="{{ pilot.id }}">{{ pilot.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
                 <button type="button" onclick="closeCreateModal()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Отмена</button>
                 <button type="submit" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Создать и сгенерировать DOCX</button>
@@ -256,6 +266,7 @@ window.onclick = function(event) {
 document.getElementById('createFlightForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
+    const pilotIdValue = document.getElementById('pilot_id').value;
     const formData = {
         departure_date: document.getElementById('departure_date').value,
         aircraft_type: document.getElementById('aircraft_type').value,
@@ -263,7 +274,8 @@ document.getElementById('createFlightForm').addEventListener('submit', async fun
         gzp: document.getElementById('gzp').value,
         departure_time: document.getElementById('departure_time').value,
         place_number: parseInt(document.getElementById('place_number').value),
-        route: document.getElementById('route').value
+        route: document.getElementById('route').value,
+        pilot_id: pilotIdValue ? parseInt(pilotIdValue) : null
     };
     
     const submitBtn = this.querySelector('button[type="submit"]');

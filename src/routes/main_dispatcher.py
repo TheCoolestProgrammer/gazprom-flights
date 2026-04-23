@@ -5,6 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, Response, status,UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from src.models.airport import Airport
+from src.models.pilot import Pilot
 from src.crud.flight import create_flights_bulk
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
@@ -207,8 +208,10 @@ async def upload_flights_docx(
 @router.get("/flights", response_class=HTMLResponse)
 async def flights_page(request: Request, db: SessionDep):
     flights = db.query(Flight).order_by(Flight.departure_date.desc()).all()
+    pilots = db.query(Pilot).all()
     return templates.TemplateResponse(request=request, name="main_dispatcher/flights.html", context={
-        "flights":flights
+        "flights": flights,
+        "pilots": pilots
     })
 
 @router.post("/create-from-form", response_model=dict)
@@ -242,7 +245,8 @@ async def create_flight_from_form(
             departure_date=flight_data.departure_date,
             departure_time=flight_data.departure_time,
             place_number=flight_data.place_number,
-            route=flight_data.route
+            route=flight_data.route,
+            pilot_id=flight_data.pilot_id
         )
         db.add(new_flight)
         db.commit()
