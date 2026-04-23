@@ -137,3 +137,31 @@ async def get_done_flights(request: Request,
     return templates.TemplateResponse(request=request, name="dispatcher/done_flights.html", context={
         "flights": flights_data
     })
+
+
+@router.post("/cancel_done")
+async def cancel_done_status(
+    session: SessionDep,
+    passenger_id: int = Form(...),
+    flight_id: int = Form(...),
+    user: User = Depends(RoleChecker(Role.DISPATCHER))
+):
+    # Находим пассажира и меняем статус обратно на PENDING
+    passenger = session.get(Passenger, passenger_id)
+    if not passenger:
+        raise HTTPException(status_code=404, detail="Пассажир не найден")
+    
+    passenger.done_status = RequestStatus.PENDING
+    
+    # Удаляем связь PassengerFlight для этого рейса
+    pf = session.query(PassengerFlight).filter(
+        PassengerFlight.passenger_id == passenger_id,
+        PassengerFlight.flight_id == flight_id
+    ).first()
+    
+    if pf:
+        session.delete(pf)
+    
+    session.commit()
+    
+    return RedirectResponse(url="/dispatcher/done", status_code=303)

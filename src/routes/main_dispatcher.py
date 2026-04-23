@@ -7,7 +7,6 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from src.models.airport import Airport
 from src.models.pilot import Pilot
 from src.crud.flight import create_flights_bulk
-from src.crud.excel_generator import generate_both_excel_files
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
 # from src.models.flight_route import FlightRoute
@@ -20,7 +19,6 @@ from src.parsers.docs_parser import parse_flight_docx
 from docx import Document
 from io import BytesIO
 from src.templates_config import templates
-import zipfile
 
 router = APIRouter(prefix="/main_dispatcher", tags=["main_dispatcher"])
 
@@ -337,7 +335,7 @@ def generate_flight_docx(flight: Flight, gzp: str) -> bytes:
     return buffer.getvalue()
 
 
-@router.get("/download-selected")
+@router.post("/download-selected")
 async def download_selected_flights(
     request: SelectedFlightsRequest,
     db: SessionDep
@@ -368,39 +366,6 @@ async def download_selected_flights(
         content=docx_bytes,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
-    )
-
-@router.get("/download-excel-tables/{flight_id}")
-async def download_excel_tables(flight_id: int, db: SessionDep):
-    """
-    Скачивает два Excel файла с таблицами пассажиров для рейса:
-    1. ОБРАЗЕЦ!!Список пассажиров.xlsx - манифест пассажиров
-    2. Список_пассажиров_для_оформления_авиабилетов.xlsx - список для оформления билетов
-    """
-    flight = db.query(Flight).filter(Flight.id == flight_id).first()
-    if not flight:
-        raise HTTPException(status_code=404, detail="Рейс не найден")
-    
-    # Генерируем оба Excel файла
-    manifest_bytes, ticket_list_bytes = generate_both_excel_files(flight, db)
-    
-    # Создаём ZIP архив с двумя файлами
-    zip_buffer = BytesIO()
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        # Добавляем манифест
-        manifest_filename = f"Манифест_рейс_{flight.flight_number}_{flight.departure_date}.xlsx"
-        zip_file.writestr(manifest_filename, manifest_bytes)
-        
-        # Добавляем список для оформления билетов
-        ticket_filename = f"Билеты_рейс_{flight.flight_number}_{flight.departure_date}.xlsx"
-        zip_file.writestr(ticket_filename, ticket_list_bytes)
-    
-    zip_buffer.seek(0)
-    
-    return Response(
-        content=zip_buffer.getvalue(),
-        media_type="application/zip",
-        headers={"Content-Disposition": f"attachment; filename=flight_{flight.flight_number}_{flight.departure_date}.zip"}
     )
 
 def generate_multiple_flights_docx(flights: list[Flight]) -> bytes:
