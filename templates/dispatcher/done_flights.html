@@ -18,6 +18,7 @@
                 <th>Вес багажа</th>
                 <th>Цель поездки</th>
                 <th>ID перелета</th>
+                <th>статус пассажира</th>
                 <th>Действие</th>
             </tr>
         </thead>
@@ -36,6 +37,8 @@
                 <td>{{ pf.passengers.trip_purpose.value }}</td>
                 
                 <td><code>#{{ pf.passengers.application_id }}</code></td>
+                <td>{{ pf.passengers.flight_status.value }}</td>
+                {% if pf.passengers.flight_status.value != "вылетел" %}
                 <td>
                     <form method="post" action="/dispatcher/cancel_done" style="display: inline;">
                         <input type="hidden" name="passenger_id" value="{{ pf.passengers.id }}">
@@ -43,6 +46,15 @@
                         <button type="submit" class="btn-cancel">Отменить</button>
                     </form>
                 </td>
+                <td>
+                    <form method="post" action="/dispatcher/fly_passenger" style="display: inline;">
+                        <input type="hidden" name="passenger_id" value="{{ pf.passengers.id }}">
+                        <input type="hidden" name="flight_id" value="{{ pf.flight_id }}">
+                        <button type="submit" class="btn-approve">улетел</button>
+                    </form>
+                </td>
+                {% endif %}
+                
             </tr>
             {% else %}
             <tr>
@@ -71,6 +83,19 @@
     }
     .btn-cancel:hover {
         background-color: #ff5252;
+    }
+    .btn-approve { 
+        padding: 8px 16px; 
+        background-color: #4CAF50; 
+        color: white; 
+        border: none; 
+        border-radius: 4px; 
+        cursor: pointer; 
+        font-size: 14px;
+        transition: background-color 0.3s;
+    }
+    .btn-approve:hover {
+        background-color: #45a049;
     }
 </style>
 {% endblock %}

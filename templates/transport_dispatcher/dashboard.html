@@ -21,6 +21,7 @@
                 <th>назначенная дата</th>
                 <th>Статус директора</th>
                 <th>статус старшего диспетчера</th>
+                <th>статус вылета</th>
                 <th>Действия</th>
             </tr>
         </thead>
@@ -53,7 +54,9 @@
                     </span>
                 </td>
                 <td>
-                    <a href="/transport_dispatcher/edit/{{ req.id }}">📝</a>
+                    <span class="status-{{ req.flight_status.name.lower() }}">
+                        {{ req.flight_status.value }}
+                    </span>
                 </td>
                 <td>
                     <button type="button" 

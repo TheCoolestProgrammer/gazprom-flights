@@ -10,7 +10,7 @@ from src.models.flights import Flight
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
 from src.models.user import User, Role
-from src.models.passenger import Passenger, RequestStatus,Gender 
+from src.models.passenger import Passenger, RequestStatus,Gender , FlightStatus
 from src.models.department import Department
 from src.templates_config import templates
 import datetime
@@ -161,6 +161,24 @@ async def cancel_done_status(
     
     if pf:
         session.delete(pf)
+    
+    session.commit()
+    
+    return RedirectResponse(url="/dispatcher/done", status_code=303)
+
+@router.post("/fly_passenger")
+async def fly_passenger(
+    session: SessionDep,
+    passenger_id: int = Form(...),
+    flight_id: int = Form(...),
+    user: User = Depends(RoleChecker(Role.DISPATCHER))
+):
+    # Находим пассажира и меняем статус обратно на PENDING
+    passenger = session.get(Passenger, passenger_id)
+    if not passenger:
+        raise HTTPException(status_code=404, detail="Пассажир не найден")
+    
+    passenger.flight_status = FlightStatus.FLIGHTED
     
     session.commit()
     
