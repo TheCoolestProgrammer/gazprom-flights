@@ -25,6 +25,26 @@ async def dashboard(
     })
 
 
+@router.post("/change_status_batch")
+async def change_status_batch(
+    session: SessionDep,
+    selected_ids: list[int] = Form(...),
+    action: str = Form(...),
+    user: User = Depends(RoleChecker(Role.DEPARTMENT_DEIRECTOR))
+):
+    """Массовое изменение статуса заявок"""
+    # Определяем статус на основе действия
+    new_status = RequestStatus.CONFIRMED if action == "approved" else RequestStatus.REJECTED
+    
+    # Обновляем статус для всех выбранных заявок
+    for passenger_id in selected_ids:
+        passenger = session.get(Passenger, passenger_id)
+        if passenger and passenger.department_id == user.department_id:
+            passenger.department_director_status = new_status
+    
+    session.commit()
+    return RedirectResponse(url="/department_director", status_code=303)
+
 
 @router.patch("/change_status/{passenger_id}", response_class=HTMLResponse)
 async def change_status(

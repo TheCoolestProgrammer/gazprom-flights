@@ -2,85 +2,112 @@
 
 {% block content %}
 <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2>Мои заявки на перевозку</h2>
+        <div>
+            <button type="submit" form="status-form" name="action" value="approved" class="btn-submit" style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Согласовать выбранные</button>
+            <button type="submit" form="status-form" name="action" value="rejected" class="btn-submit" style="background: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Отказать выбранные</button>
+        </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Дата</th>
-                <th>ФИО</th>
-                <th>Цель</th>
-                <th>отношение к ГТЮ</th>
-                <th>откуда</th>
-                <th>куда</th>
-                <th>планируемая дата</th>
-                <th>Статус</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for req in requests %}
-            <tr>
-                <td>{{ req.request_date|format_date_ru }}</td>
-                <td>{{ req.fullname }}</td>
-                <td>{{ req.trip_purpose.value }}...</td>
-                <td>{{ req.gtu_relation.value }}</td>
-                <td>{{ req.flight_from.name}}</td>
-                <td>{{ req.flight_to.name}}</td>
-                <td>{{ req.planning_date|format_date_ru }}</td>
-                <td>
-                    <span class="status-{{ req.department_director_status.name.lower() }}">
-                        {{ req.department_director_status.value }}
-                    </span>
-                </td>
-
-                <td>
-                    <button type="button" 
-                        class="btn btn-danger" 
-                        onclick="change_request_status('{{ req.id }}', '{{Status.CONFIRMED.value}}')"
-                        style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
-                        {{Status.CONFIRMED.value}}
-                    </button>
-                </td>
-
-                <td>
-                    <button type="button" 
-                        class="btn btn-danger" 
-                        onclick="change_request_status('{{ req.id }}', '{{Status.REJECTED.value}}')"
-                        style="background: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
-                        {{Status.REJECTED.value}}
-                    </button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <!-- Форма для массового изменения статуса -->
+    <form id="status-form" action="/department_director/change_status_batch" method="POST">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background-color: #f2f2f2;">
+                        <th style="padding: 10px; border: 1px solid #ddd;"><input type="checkbox" id="select-all"></th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Дата</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">ФИО</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Цель</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">отношение к ГТЮ</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">откуда</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">куда</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">планируемая дата</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for req in requests %}
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                            <input type="checkbox" name="selected_ids" value="{{ req.id }}">
+                        </td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.request_date|format_date_ru }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.fullname }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.trip_purpose.value }}...</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.gtu_relation.value }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_from.name}}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_to.name}}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.planning_date|format_date_ru }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">
+                            <span class="status-{{ req.department_director_status.name.lower() }}">
+                                {{ req.department_director_status.value }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" style="padding: 20px; text-align: center;">Нет заявок</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </form>
 </div>
 <script>
-async function change_request_status(passengerId,status) {
-
-    try {
-        const response = await fetch(`/department_director/change_status/${passengerId}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ "request_status": status })
-        });
-
-        if (response.ok) {
-            alert('статус изменен');
-            window.location.reload(); 
-        } else {
-            const errorData = await response.json();
-            alert('Ошибка при изменении: ' + (errorData.detail || 'Неизвестная ошибка'));
+    // Чекбокс "Выбрать все"
+    const selectAllCheckbox = document.getElementById('select-all');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.onclick = function() {
+            const checkboxes = document.getElementsByName('selected_ids');
+            for (let checkbox of checkboxes) {
+                checkbox.checked = this.checked;
+            }
         }
-    } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Произошла системная ошибка при попытке удаления');
     }
-}
+
+    // Валидация перед отправкой
+    const statusForm = document.getElementById('status-form');
+    if (statusForm) {
+        statusForm.onsubmit = function(e) {
+            const checkboxes = document.getElementsByName('selected_ids');
+            const checked = Array.from(checkboxes).some(cb => cb.checked);
+            if (!checked) {
+                alert('Пожалуйста, выберите хотя бы одну заявку');
+                e.preventDefault();
+                return false;
+            }
+            return true;
+        }
+    }
 </script>
+
+<style>
+    .status-approved, .status-confirmed {
+        color: green;
+        font-weight: bold;
+    }
+    .status-rejected {
+        color: red;
+        font-weight: bold;
+    }
+    .status-pending {
+        color: orange;
+        font-weight: bold;
+    }
+    .btn-submit {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-submit:hover {
+        background: #0056b3;
+    }
+</style>
+
 {% endblock %}
