@@ -87,6 +87,7 @@
                         <th style="padding: 10px; border: 1px solid #ddd;">ФИО</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">Паспорт</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">Вес багажа</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">филиал заявителя</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">Откуда</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">Куда</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">ГТЮ</th>
@@ -106,6 +107,8 @@
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.fullname }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.passport }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.cargo_weight }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.users.departments.name}}</td>
+
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_from.name if req.flight_from else '-' }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_to.name if req.flight_to else '-' }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.gtu_relation.value if req.gtu_relation else '-' }}</td>
