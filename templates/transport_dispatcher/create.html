@@ -10,24 +10,25 @@
 
     <form action="/transport_dispatcher/create" method="post" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
         
-        <!-- ФИО -->
-        <div style="grid-column: span 2;">
+        <!-- ФИО с автодополнением -->
+        <div style="grid-column: span 2; position: relative;">
             <label style="display:block; margin-bottom:5px;">ФИО сотрудника</label>
-            <input type="text" name="fullname" required placeholder="Иванов Иван Иванович" 
+            <input type="text" name="fullname" id="fullnameInput" required placeholder="Иванов Иван Иванович" 
                    style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+            <div id="autocompleteList" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; border-top: none; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none;"></div>
         </div>
 
         <!-- Паспорт -->
         <div>
             <label style="display:block; margin-bottom:5px;">Серия и номер паспорта</label>
-            <input type="number" name="passport" required placeholder="1234567890" 
+            <input type="number" name="passport" id="passportInput" required placeholder="1234567890" 
                    style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
         </div>
 
         <!-- филиал -->
         <div>
             <label style="display:block; margin-bottom:5px;">место отправления</label>
-            <select name="flight_from" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+            <select name="flight_from" id="flightFromInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите подразделение</option>
                 {% for dept in airports %}
                     <option value="{{ dept.id }}">{{ dept.name }}</option>
@@ -38,14 +39,14 @@
         <!-- Дата рождения -->
         <div>
             <label style="display:block; margin-bottom:5px;">Дата рождения</label>
-            <input type="date" name="birthdate" required 
+            <input type="date" name="birthdate" id="birthdateInput" required 
                    style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
         </div>
 
         <!-- Пол -->
         <div>
             <label style="display:block; margin-bottom:5px;">Пол</label>
-            <select name="gender" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+            <select name="gender" id="genderInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="муж">Мужской</option>
                 <option value="жен">Женский</option>
             </select>
@@ -54,7 +55,7 @@
         <!-- Маршрут перелета -->
         <div style="grid-column: span 2;">
             <label style="display:block; margin-bottom:5px;">точка назначения</label>
-            <select name="flight_to" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+            <select name="flight_to" id="flightToInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите направление</option>
                 {% for route in airports %}
                     <option value="{{ route.id }}">{{ route.name }}</option>
@@ -65,7 +66,7 @@
         <!-- принадлежит филиалу -->
         <div style="grid-column: span 2;">
             <label style="display:block; margin-bottom:5px;">принадлежит филиалу</label>
-            <select name="department_id" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+            <select name="department_id" id="departmentInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите филиал</option>
                 {% for route in departments %}
                     <option value="{{ route.id }}">{{ route.name }}</option>
@@ -75,22 +76,20 @@
         <!-- Планируемая дата и Вес груза -->
         <div>
             <label style="display:block; margin-bottom:5px;">Планируемая дата</label>
-            <input type="date" name="planning_date" required 
+            <input type="date" name="planning_date" id="planningDateInput" required 
                    style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
         </div>
 
         <div>
             <label style="display:block; margin-bottom:5px;">Вес груза (кг)</label>
-            <input type="number" step="0.1" name="cargo_weight" placeholder="0.0" 
+            <input type="number" step="0.1" name="cargo_weight" id="cargoWeightInput" placeholder="0.0" 
                    style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
         </div>
 
         <!-- Цель поездки -->
         <div style="grid-column: span 2;">
             <label style="display:block; margin-bottom:5px;">Цель поездки</label>
-            <!-- <textarea name="trip_purpose" required rows="3" placeholder="Укажите причину командировки" -->
-                      <!-- style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; resize: vertical;"></textarea> -->
-            <select name="trip_purpose" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+            <select name="trip_purpose" id="tripPurposeInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите направление</option>
                 {% for purpose in TripPurpose %}
                     <option value="{{ purpose.value }}">{{ purpose.value }}</option>
@@ -101,9 +100,7 @@
         <!-- отношение к ГТЮ -->
         <div style="grid-column: span 2;">
             <label style="display:block; margin-bottom:5px;">отношение к ГТЮ</label>
-            <!-- <textarea name="trip_purpose" required rows="3" placeholder="Укажите причину командировки" -->
-                      <!-- style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; resize: vertical;"></textarea> -->
-            <select name="gtu_relation" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+            <select name="gtu_relation" id="gtuRelationInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите отношение</option>
                 {% for relation in GTURelation %}
                     <option value="{{ relation.value }}">{{ relation.value }}</option>
@@ -128,4 +125,58 @@
 
     </form>
 </div>
+
+<script>
+const fullnameInput = document.getElementById('fullnameInput');
+const autocompleteList = document.getElementById('autocompleteList');
+let debounceTimer;
+
+fullnameInput.addEventListener('input', function() {
+    clearTimeout(debounceTimer);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        autocompleteList.style.display = 'none';
+        return;
+    }
+    
+    debounceTimer = setTimeout(() => {
+        fetch(`/transport_dispatcher/search-passengers?query=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.passengers && data.passengers.length > 0) {
+                    autocompleteList.innerHTML = data.passengers.map(p => 
+                        `<div style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; hover: {background: #f5f5f5}" 
+                              onmouseover="this.style.background='#f5f5f5'" 
+                              onmouseout="this.style.background='white'"
+                              onclick="selectPassenger(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+                            <strong>${p.fullname}</strong> | Паспорт: ${p.passport} | ${p.birthdate}
+                        </div>`
+                    ).join('');
+                    autocompleteList.style.display = 'block';
+                } else {
+                    autocompleteList.style.display = 'none';
+                }
+            });
+    }, 300);
+});
+
+function selectPassenger(passenger) {
+    document.getElementById('fullnameInput').value = passenger.fullname;
+    document.getElementById('passportInput').value = passenger.passport;
+    document.getElementById('birthdateInput').value = passenger.birthdate;
+    document.getElementById('genderInput').value = passenger.gender;
+    document.getElementById('departmentInput').value = passenger.department_id;
+    
+    autocompleteList.style.display = 'none';
+}
+
+// Закрывать список при клике вне него
+document.addEventListener('click', function(e) {
+    if (e.target !== fullnameInput && e.target !== autocompleteList) {
+        autocompleteList.style.display = 'none';
+    }
+});
+</script>
+
 {% endblock %}

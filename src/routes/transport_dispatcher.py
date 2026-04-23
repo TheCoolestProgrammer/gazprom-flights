@@ -140,6 +140,50 @@ async def edit_request(
     return RedirectResponse(url="/transport_dispatcher/", status_code=303)
 
 
+@router.get("/search-passengers", response_class=JSONResponse)
+async def search_passengers(
+    query: str,
+    session: SessionDep,
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
+):
+    """Поиск пассажиров по ФИО, паспорту или дате рождения. Возвращает уникальные комбинации."""
+    if not query or len(query.strip()) < 2:
+        return JSONResponse(content={"passengers": []})
+    
+    query_lower = query.lower().strip()
+    
+    # Ищем пассажиров, созданных текущим пользователем
+    passengers = session.query(Passenger).filter(
+        Passenger.created_by == user.id
+    ).all()
+    
+    # Фильтруем по совпадению ФИО, паспорта или даты рождения
+    # Используем словарь для удаления дубликатов по паспорту и филиалу
+    seen = set()
+    matching_passengers = []
+    
+    for passenger in passengers:
+        fullname_match = query_lower in passenger.fullname.lower()
+        passport_match = query in str(passenger.passport)
+        birthdate_match = query in str(passenger.birthdate)
+        
+        if fullname_match or passport_match or birthdate_match:
+            # Ключ для уникальности: паспорт + филиал
+            unique_key = (passenger.passport, passenger.department_id)
+            
+            if unique_key not in seen:
+                seen.add(unique_key)
+                matching_passengers.append({
+                    "fullname": passenger.fullname,
+                    "passport": passenger.passport,
+                    "birthdate": str(passenger.birthdate),
+                    "gender": passenger.gender.value,
+                    "department_id": passenger.department_id,
+                })
+    
+    return JSONResponse(content={"passengers": matching_passengers[:10]})  # Лимит 10 результатов
+
+
 @router.delete("/delete/{passenger_id}")
 async def delete_passenger(
     passenger_id: int, 
