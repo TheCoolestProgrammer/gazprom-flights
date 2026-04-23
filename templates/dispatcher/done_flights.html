@@ -35,7 +35,7 @@
                 <td>{{ pf.passengers.cargo_weight }} кг</td>
                 <td>{{ pf.passengers.trip_purpose.value }}</td>
                 
-                <td><code>#{{ pf.flight_id }}</code></td>
+                <td><code>#{{ pf.passengers.application_id }}</code></td>
                 <td>
                     <form method="post" action="/dispatcher/cancel_done" style="display: inline;">
                         <input type="hidden" name="passenger_id" value="{{ pf.passengers.id }}">

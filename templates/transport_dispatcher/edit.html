@@ -111,6 +111,12 @@
             </select>
         </div>
 
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">номер заявки</label>
+            <input type="number" name="application_id" placeholder="номер заявки"
+                      style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; resize: vertical;"
+                      value="{{passenger.application_id}}">
+        </div>
         <!-- Кнопки -->
         <div style="grid-column: span 2; display: flex; gap: 10px; margin-top: 10px;">
             <button type="submit" class="btn btn-primary" style="flex: 1; font-weight: bold;">

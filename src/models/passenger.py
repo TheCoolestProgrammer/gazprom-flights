@@ -41,10 +41,15 @@ class GTURelation(enum.Enum):
     OTHER_CARGO="сторонний груз"
     OTHER="другое"
 
+class FlightStatus(enum.Enum):
+    FLIGHTED = "вылетел"
+    NOT_FLIGHTED = "не вылетел"
+
 class Passenger(Base):
     __tablename__ = "passengers"
 
     id = Column(Integer, primary_key=True, index=True)
+    application_id = Column(String(50), nullable=True, index=True)
     fullname = Column(String(100), nullable=False)
     birthdate = Column(Date, nullable=False)
     gender = Column(Enum(Gender), nullable=False)
@@ -63,7 +68,8 @@ class Passenger(Base):
     department_director_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
     main_dispatcher_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
     done_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
-    
+    flight_status = Column(Enum(FlightStatus), nullable=False, default=FlightStatus.NOT_FLIGHTED)
+
     created_by = Column(Integer, ForeignKey("users.id"))
 
     flight_from = relationship("Airport",foreign_keys=[flight_from_id], back_populates="passengers_departing")
