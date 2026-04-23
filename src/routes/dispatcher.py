@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, Depends, Form, sta
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
+from src.models.pilot import Pilot
 from src.models.airport import Airport
 from src.models.passenger_flight import PassengerFlight
 from src.models.flights import Flight
@@ -80,10 +81,13 @@ async def dashboard(
         if req.main_dispatcher_status:
             unique_dispatcher_statuses.add((req.main_dispatcher_status.name, req.main_dispatcher_status.value))
     
+    pilots = session.query(Pilot).all()
+
     return templates.TemplateResponse(
         request=request, 
         name="dispatcher/dashboard.html", 
         context={
+            "pilots": pilots,
             "user": user,
             "requests": requests,
             "flights": flights,
