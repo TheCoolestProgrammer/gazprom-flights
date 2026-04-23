@@ -18,6 +18,7 @@
                 <th>откуда</th>
                 <th>куда</th>
                 <th>планируемая дата</th>
+                <th>назначенная дата</th>
                 <th>Статус директора</th>
                 <th>статус старшего диспетчера</th>
                 <th>Действия</th>
@@ -34,6 +35,13 @@
                 <td>{{ req.flight_from.name}}</td>
                 <td>{{ req.flight_to.name}}</td>
                 <td>{{ req.planning_date|format_date_ru }}</td>
+                <td>
+                    {% if req.passenger_flights and req.passenger_flights|length > 0 %}
+                        {{ req.passenger_flights[0].flights.departure_date|format_date_ru }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
                 <td>
                     <span class="status-{{ req.department_director_status.name.lower() }}">
                         {{ req.department_director_status.value }}

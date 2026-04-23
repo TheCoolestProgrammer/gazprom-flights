@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request, Depends, Form, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from sqlalchemy.orm import joinedload
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
 # from src.models.flight_route import FlightRoute
@@ -7,6 +8,7 @@ from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
 from src.models.department import Department
 from src.models.airport import Airport
+from src.models.passenger_flight import PassengerFlight
 from src.templates_config import templates
 
 router = APIRouter(prefix="/transport_dispatcher", tags=["transport_dispatcher"])
@@ -18,7 +20,9 @@ async def dashboard(
     session: SessionDep,
     user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
     ):
-    requests = session.query(Passenger).filter(Passenger.created_by==user.id).order_by(Passenger.request_date.desc()).all()
+    requests = session.query(Passenger).filter(Passenger.created_by==user.id).options(
+        joinedload(Passenger.passenger_flights).joinedload(PassengerFlight.flights)
+    ).order_by(Passenger.request_date.desc()).all()
     return templates.TemplateResponse(request=request, name="transport_dispatcher/dashboard.html", context={
         "user": user,
         "requests": requests
