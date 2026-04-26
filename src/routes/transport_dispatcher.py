@@ -1,3 +1,4 @@
+from alembic.environment import Optional
 from fastapi import APIRouter, HTTPException, Request, Depends, Form, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy.orm import joinedload
@@ -58,7 +59,7 @@ async def create_request(
     trip_purpose: TripPurpose = Form(...),
     planning_date: str = Form(...),
     flight_to: int = Form(...),
-    cargo_weight:float = Form(...),
+    cargo_weight:Optional[float] = Form(default=None),
     gtu_relation:GTURelation = Form(...),
     department_id:int = Form(...),
     application_id: str = Form(...),
@@ -119,7 +120,7 @@ async def edit_request(
     trip_purpose: TripPurpose = Form(...),
     planning_date: str = Form(...),
     flight_to: int = Form(...),
-    cargo_weight:float = Form(...),
+    cargo_weight:float = Form(None),
     gtu_relation:GTURelation = Form(...),
     department_id:int = Form(...),
     application_id: str = Form(...),

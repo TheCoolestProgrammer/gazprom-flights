@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, Request, Depends, Form, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import aliased, joinedload
 from src.models.pilot import Pilot
 from src.models.airport import Airport
 from src.models.passenger_flight import PassengerFlight
@@ -29,8 +29,8 @@ async def dashboard(
     planning_date: Optional[str] = Query(None, description="Желаемая дата"),
     flight_from: Optional[str] = Query(None, description="Откуда"),
     flight_to: Optional[str] = Query(None, description="Куда"),
-    director_status: Optional[str] = Query(None, description="Статус директора"),
-    dispatcher_status: Optional[str] = Query(None, description="Статус диспетчера"),
+    # director_status: Optional[str] = Query(None, description="Статус директора"),
+    # dispatcher_status: Optional[str] = Query(None, description="Статус диспетчера"),
 ):
     # Получаем все рейсы
     stmt = select(Flight).where(Flight.departure_date > datetime.date.today())
@@ -38,7 +38,9 @@ async def dashboard(
     
     # Базовый запрос заявок
     query = session.query(Passenger).filter(Passenger.done_status != RequestStatus.CONFIRMED)
-    
+    airport_from = aliased(Airport)
+    airport_to = aliased(Airport)
+
     # Применяем фильтры
     if planning_date:
         try:
@@ -47,17 +49,18 @@ async def dashboard(
         except ValueError:
             pass  # Игнорируем неверный формат даты
     
+    
     if flight_from:
-        query = query.join(Passenger.flight_from).filter(Airport.name == flight_from)
-    
+        query = query.join(airport_from, Passenger.flight_from).filter(airport_from.name == flight_from)
+
     if flight_to:
-        query = query.join(Passenger.flight_to).filter(Airport.name == flight_to)
+        query = query.join(airport_to, Passenger.flight_to).filter(airport_to.name == flight_to)
+
+    # if director_status:
+    #     query = query.filter(Passenger.department_director_status == director_status)
     
-    if director_status:
-        query = query.filter(Passenger.department_director_status == director_status)
-    
-    if dispatcher_status:
-        query = query.filter(Passenger.main_dispatcher_status == dispatcher_status)
+    # if dispatcher_status:
+    query = query.filter(Passenger.main_dispatcher_status == RequestStatus.CONFIRMED)
     
     # Сортируем по дате заявки (сначала новые)
     requests = query.order_by(Passenger.request_date.desc()).all()
@@ -68,18 +71,18 @@ async def dashboard(
     
     unique_cities_from = set()
     unique_cities_to = set()
-    unique_director_statuses = set()
-    unique_dispatcher_statuses = set()
+    # unique_director_statuses = set()
+    # unique_dispatcher_statuses = set()
     
     for req in all_requests:
         if req.flight_from:
             unique_cities_from.add(req.flight_from.name)
         if req.flight_to:
             unique_cities_to.add(req.flight_to.name)
-        if req.department_director_status:
-            unique_director_statuses.add((req.department_director_status.name, req.department_director_status.value))
-        if req.main_dispatcher_status:
-            unique_dispatcher_statuses.add((req.main_dispatcher_status.name, req.main_dispatcher_status.value))
+        # if req.department_director_status:
+        #     unique_director_statuses.add((req.department_director_status.name, req.department_director_status.value))
+        # if req.main_dispatcher_status:
+        #     unique_dispatcher_statuses.add((req.main_dispatcher_status.name, req.main_dispatcher_status.value))
     
     pilots = session.query(Pilot).all()
 
@@ -95,13 +98,13 @@ async def dashboard(
                 "planning_date": planning_date,
                 "flight_from": flight_from,
                 "flight_to": flight_to,
-                "director_status": director_status,
-                "dispatcher_status": dispatcher_status,
+                # "director_status": director_status,
+                # "dispatcher_status": dispatcher_status,
             },
             "unique_cities_from": sorted(list(unique_cities_from)),
             "unique_cities_to": sorted(list(unique_cities_to)),
-            "unique_director_statuses": sorted(list(unique_director_statuses)),
-            "unique_dispatcher_statuses": sorted(list(unique_dispatcher_statuses)),
+            # "unique_director_statuses": sorted(list(unique_director_statuses)),
+            # "unique_dispatcher_statuses": sorted(list(unique_dispatcher_statuses)),
         }
     )
 

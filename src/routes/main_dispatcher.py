@@ -21,6 +21,7 @@ from docx import Document
 from io import BytesIO
 from src.templates_config import templates
 import zipfile
+from datetime import date
 
 router = APIRouter(prefix="/main_dispatcher", tags=["main_dispatcher"])
 
@@ -106,6 +107,7 @@ async def change_status(
     request: Request,
     session: SessionDep,
     passenger_id:int,
+    planning_date: date = Body(None),
     request_status:RequestStatus = Body(..., embed=True),
     user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
     ):
@@ -118,6 +120,10 @@ async def change_status(
         )
     # try:
     passenger.main_dispatcher_status = request_status
+
+    if planning_date:
+        passenger.planning_date = planning_date
+
     session.commit()
     
     return JSONResponse(
@@ -337,7 +343,7 @@ def generate_flight_docx(flight: Flight, gzp: str) -> bytes:
     return buffer.getvalue()
 
 
-@router.get("/download-selected")
+@router.post("/download-selected")
 async def download_selected_flights(
     request: SelectedFlightsRequest,
     db: SessionDep

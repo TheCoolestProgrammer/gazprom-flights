@@ -43,7 +43,7 @@
                 </select>
             </div>
             
-            <div>
+            <!-- <div>
                 <label style="font-weight: bold;">Статус директора:</label><br>
                 <select name="director_status" style="width: 100%; padding: 5px;">
                     <option value="">Все</option>
@@ -61,7 +61,7 @@
                         <option value="{{ status_name }}" {% if filters.dispatcher_status == status_name %}selected{% endif %}>{{ status_value }}</option>
                     {% endfor %}
                 </select>
-            </div>
+            </div> -->
             
             <div style="display: flex; gap: 10px; align-items: flex-end;">
                 <button type="submit" style="background: #007bff; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer;">Применить</button>
@@ -96,8 +96,8 @@
                         <th style="padding: 10px; border: 1px solid #ddd;">Откуда</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">Куда</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">ГТЮ</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Статус директора</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Статус диспетчера</th>
+                        <!-- <th style="padding: 10px; border: 1px solid #ddd;">Статус директора</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">Статус диспетчера</th> -->
                     </tr>
                 </thead>
                 <tbody>
@@ -117,7 +117,7 @@
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_from.name if req.flight_from else '-' }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_to.name if req.flight_to else '-' }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.gtu_relation.value if req.gtu_relation else '-' }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">
+                        <!-- <td style="padding: 8px; border: 1px solid #ddd;">
                             <span class="status-{{ req.department_director_status.name.lower() if req.department_director_status else 'unknown' }}">
                                 {{ req.department_director_status.value if req.department_director_status else '-' }}
                             </span>
@@ -126,7 +126,7 @@
                             <span class="status-{{ req.main_dispatcher_status.name.lower() if req.main_dispatcher_status else 'unknown' }}">
                                 {{ req.main_dispatcher_status.value if req.main_dispatcher_status else '-' }}
                             </span>
-                        </td>
+                        </td> -->
                     </tr>
                     {% else %}
                     <tr>

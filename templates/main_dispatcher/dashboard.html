@@ -24,8 +24,8 @@
                 <th>откуда</th>
                 <th>куда</th>
                 <th>планируемая дата</th>
-                <th>Статус директора</th>
-                <th>статус старшего диспетчера</th>
+                <!-- <th>Статус директора</th> -->
+                <th>статус СОВП</th>
                 <th>Действия</th>
             </tr>
         </thead>
@@ -40,11 +40,11 @@
                 <td>{{ req.flight_from.name}}</td>
                 <td>{{ req.flight_to.name}}</td>
                 <td>{{ req.planning_date|format_date_ru }}</td>
-                <td>
+                <!-- <td>
                     <span class="status-{{ req.department_director_status.name.lower() }}">
                         {{ req.department_director_status.value }}
                     </span>
-                </td>
+                </td> -->
                 <td>
                     <span class="status-{{ req.main_dispatcher_status.name.lower() }}">
                         {{ req.main_dispatcher_status.value }}
@@ -55,8 +55,8 @@
                 </td>
                 <td>
                     <button type="button" 
-                        class="btn btn-danger" 
-                        onclick="change_request_status('{{ req.id }}', '{{Status.CONFIRMED.value}}')"
+                        class="btn btn-success" 
+                        onclick="openPlanningModal('{{ req.id }}')"
                         style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
                         {{Status.CONFIRMED.value}}
                     </button>
@@ -107,6 +107,32 @@
     </div>
 </div>
 
+<!-- модальное окно для ввода даты -->
+<div id="planningModal" style="display: none; position: fixed; z-index: 1001; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+    <div style="background-color: white; margin: 15% auto; padding: 20px; border-radius: 8px; width: 350px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+        <h3 style="margin-top: 0;">Укажите дату полета</h3>
+        <p style="font-size: 0.9em; color: #666;">Заявка будет переведена в статус «Согласовано»</p>
+        
+        <input type="hidden" id="modalRequestId">
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Планируемая дата:</label>
+            <input type="date" id="modalPlanningDate" required 
+                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" onclick="closePlanningModal()" 
+                    style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Отмена
+            </button>
+            <button type="button" onclick="submitPlanningDate()" 
+                    style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                Подтвердить
+            </button>
+        </div>
+    </div>
+</div>
 <script>
 // Открыть модальное окно
 function openUploadModal() {
@@ -128,7 +154,17 @@ window.onclick = function(event) {
         closeUploadModal();
     }
 }
+// Открытие модального окна даты
+function openPlanningModal(requestId) {
+    document.getElementById('modalRequestId').value = requestId;
+    // Установим сегодняшнюю дату по умолчанию
+    document.getElementById('modalPlanningDate').valueAsDate = new Date();
+    document.getElementById('planningModal').style.display = 'block';
+}
 
+function closePlanningModal() {
+    document.getElementById('planningModal').style.display = 'none';
+}
 // Обработка загрузки файла
 document.getElementById('uploadForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -227,30 +263,63 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
         }, 2000);
     }
 });
+// Отправка данных на сервер (Статус + Дата)
+async function submitPlanningDate() {
+    const requestId = document.getElementById('modalRequestId').value;
+    const planningDate = document.getElementById('modalPlanningDate').value;
+    
+    if (!planningDate) {
+        alert('Пожалуйста, выберите дату');
+        return;
+    }
 
-// Функция изменения статуса (оставляем как есть)
-async function change_request_status(passengerId, status) {
+    // Здесь мы отправляем и дату, и новый статус одновременно
+    const payload = {
+        "request_status": "{{Status.CONFIRMED.value}}", // Передаем статус "Согласовано"
+        "planning_date": planningDate
+    };
+
+    await send_status_update(requestId, payload);
+}
+
+// Универсальная функция запроса
+async function send_status_update(passengerId, data) {
     try {
         const response = await fetch(`/main_dispatcher/change_status/${passengerId}`, {
             method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ "request_status": status })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
         });
 
         if (response.ok) {
-            alert('Статус изменен');
             window.location.reload(); 
         } else {
             const errorData = await response.json();
-            alert('Ошибка при изменении: ' + (errorData.detail || 'Неизвестная ошибка'));
+            alert('Ошибка: ' + (errorData.detail || 'Не удалось обновить данные'));
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        alert('Произошла системная ошибка при попытке изменения статуса');
+        alert('Системная ошибка сервера');
     }
 }
+
+// Переопределяем старую функцию для кнопки "Отклонить"
+async function change_request_status(passengerId, status) {
+    // Если это отклонение, отправляем только статус
+    if (status === '{{Status.REJECTED.value}}') {
+        if (confirm('Вы уверены, что хотите отклонить заявку?')) {
+            await send_status_update(passengerId, { "request_status": status });
+        }
+    }
+}
+
+// Добавим закрытие нового модального окна по клику вне его
+window.addEventListener('click', function(event) {
+    const planModal = document.getElementById('planningModal');
+    if (event.target === planModal) {
+        closePlanningModal();
+    }
+});
 </script>
 
 <style>

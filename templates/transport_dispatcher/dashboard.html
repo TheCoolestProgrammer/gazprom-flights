@@ -18,9 +18,9 @@
                 <th>откуда</th>
                 <th>куда</th>
                 <th>планируемая дата</th>
-                <th>назначенная дата</th>
+                <!-- <th>назначенная дата</th> -->
                 <th>Статус директора</th>
-                <th>статус старшего диспетчера</th>
+                <th>статус СОВП</th>
                 <th>статус вылета</th>
                 <th>Действия</th>
             </tr>
@@ -36,13 +36,13 @@
                 <td>{{ req.flight_from.name}}</td>
                 <td>{{ req.flight_to.name}}</td>
                 <td>{{ req.planning_date|format_date_ru }}</td>
-                <td>
+                <!-- <td>
                     {% if req.passenger_flights and req.passenger_flights|length > 0 %}
                         {{ req.passenger_flights[0].flights.departure_date|format_date_ru }}
                     {% else %}
                         —
                     {% endif %}
-                </td>
+                </td> -->
                 <td>
                     <span class="status-{{ req.department_director_status.name.lower() }}">
                         {{ req.department_director_status.value }}
@@ -50,7 +50,15 @@
                 </td>
                 <td>
                     <span class="status-{{ req.main_dispatcher_status.name.lower() }}">
-                        {{ req.main_dispatcher_status.value }}
+                        {%if req.main_dispatcher_status.value=="разрешен"%}
+                            {% if req.passenger_flights and req.passenger_flights|length > 0 %}
+                                {{ req.passenger_flights[0].flights.departure_date|format_date_ru }}
+                            {%else%}
+                                {{ req.planning_date|format_date_ru }}  
+                            {% endif %}
+                        {%else%}
+                            {{ req.main_dispatcher_status.value }}
+                        {%endif%}
                     </span>
                 </td>
                 <td>
@@ -64,6 +72,12 @@
                         onclick="deletePassenger('{{ req.id }}')"
                         style="background: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
                         Удалить
+                    </button>
+                    <button type="button" 
+                        class="btn btn-danger" 
+                        onclick="window.location.href='edit/{{ req.id }}'"
+                        style="background: #53cede; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                        Редактировать
                     </button>
                 </td>
             </tr>
