@@ -56,7 +56,7 @@
                 <td>
                     <button type="button" 
                         class="btn btn-success" 
-                        onclick="openPlanningModal('{{ req.id }}')"
+                        onclick="openPlanningModal('{{ req.id }}', '{{ req.planning_date }}')"
                         style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
                         {{Status.CONFIRMED.value}}
                     </button>
@@ -155,10 +155,13 @@ window.onclick = function(event) {
     }
 }
 // Открытие модального окна даты
-function openPlanningModal(requestId) {
+function openPlanningModal(requestId, planningDate) {
+    // console.log(planningDate)
     document.getElementById('modalRequestId').value = requestId;
     // Установим сегодняшнюю дату по умолчанию
     document.getElementById('modalPlanningDate').valueAsDate = new Date();
+
+    // document.getElementById('modalPlanningDate').valueAsDate = new Date(planningDate);
     document.getElementById('planningModal').style.display = 'block';
 }
 

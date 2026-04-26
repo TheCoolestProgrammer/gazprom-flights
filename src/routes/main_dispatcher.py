@@ -14,7 +14,7 @@ from src.dependencies import get_current_user, RoleChecker
 from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
 from src.models.department import Department
-from src.models.flights import Flight
+from src.models.flights import Flight, FlightPlaneStatus
 from src.schemas.flight import FlightCreate, FlightCreateForm, FlightResponse, FlightParseResponse, SelectedFlightsRequest
 from src.parsers.docs_parser import parse_flight_docx
 from docx import Document
@@ -254,7 +254,8 @@ async def create_flight_from_form(
             departure_time=flight_data.departure_time,
             place_number=flight_data.place_number,
             route=flight_data.route,
-            pilot_id=flight_data.pilot_id
+            pilot_id=flight_data.pilot_id,
+            # flight_status = FlightStatus.PLANNED.value
         )
         db.add(new_flight)
         db.commit()

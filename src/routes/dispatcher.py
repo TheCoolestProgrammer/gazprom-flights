@@ -1,14 +1,15 @@
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request, Depends, Form, status
+from fastapi import Body
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import aliased, joinedload
 from src.models.aircraft_types import AircraftType
 from src.models.pilot import Pilot
 from src.models.airport import Airport
 from src.models.passenger_flight import PassengerFlight
-from src.models.flights import Flight
+from src.models.flights import Flight, FlightPlaneStatus
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
 from src.models.user import User, Role
@@ -263,10 +264,45 @@ async def edit_request(
 
 @router.get("/flights", response_class=HTMLResponse)
 async def flights_page(request: Request, db: SessionDep):
-    flights = db.query(Flight).order_by(Flight.departure_date.desc()).all()
-    pilots = db.query(Pilot).all()
-    return templates.TemplateResponse(request=request, name="dispatcher/flights.html", context={
-        "flights": flights,
-        "pilots": pilots
-    })
+    # Создаем подзапрос для подсчета агрегатов по каждому рейсу
+    # Используем outerjoin, чтобы не потерять рейсы без пассажиров
+    stats_query = (
+        db.query(
+            PassengerFlight.flight_id,
+            func.count(Passenger.id).label("p_count"),
+            func.sum(Passenger.cargo_weight).label("total_weight")
+        )
+        .join(Passenger, PassengerFlight.passenger_id == Passenger.id)
+        .group_by(PassengerFlight.flight_id)
+        .subquery()
+    )
 
+    # Присоединяем подзапрос к основной модели Flight
+    flights_with_stats = (
+        db.query(Flight, stats_query.c.p_count, stats_query.c.total_weight)
+        .outerjoin(stats_query, Flight.id == stats_query.c.flight_id)
+        .order_by(Flight.departure_date.desc())
+        .all()
+    )
+
+    pilots = db.query(Pilot).all()
+    
+    return templates.TemplateResponse(
+        request=request, 
+        name="dispatcher/flights.html", 
+        context={
+            "flights": flights_with_stats,  # Теперь это список кортежей (Flight, count, weight)
+            "pilots": pilots,
+            "flight_statuses": FlightPlaneStatus
+        }
+    )
+
+@router.post("/flights/{flight_id}/change_status")
+async def change_flight_status(request: Request, db: SessionDep, flight_id: int, status:FlightPlaneStatus = Body(..., embed=True)):
+    flight = db.query(Flight).filter(Flight.id == flight_id).first()
+    if not flight:
+        raise HTTPException(status_code=404, detail="Рейс не найден")
+    flight.flight_status = status
+    db.commit()
+    return JSONResponse(content={"message": "Статус рейса обновлен", "new_status": flight.flight_status.value}, status_code=200)
+    

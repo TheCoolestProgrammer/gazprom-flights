@@ -40,25 +40,81 @@
                 <th style="padding: 10px; border: 1px solid #ddd;">Время</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Кресел</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Маршрут</th>
+
+                <th style="padding: 10px; border: 1px solid #ddd;">статус</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">груз(кг)</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">пассажиры(число)</th>
+
                 <th style="padding: 10px; border: 1px solid #ddd;">Действия</th>
             </tr>
         </thead>
         <tbody>
-            {% for flight in flights %}
+            {% for flight_data in flights %}
+            {% set flight = flight_data[0] %}
+            {% set passenger_count = flight_data[1] or 0 %}
+            {% set total_weight = flight_data[2] or 0 %}
             <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
                     <input type="checkbox" class="flight-checkbox" data-flight-id="{{ flight.id }}" data-flight-number="{{ flight.flight_number }}" data-aircraft-type="{{ flight.aircraft_type }}" data-gzp="{{ flight.gzp }}" data-departure-date="{{ flight.departure_date }}" data-departure-time="{{ flight.departure_time }}" data-place-number="{{ flight.place_number }}" data-route="{{ flight.route }}">
                 </td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.id }}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.aircraft_type }}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.aircraft_type_rel.name }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.flight_number }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.departure_date|format_date_ru }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.departure_time }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.place_number }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.route }}</td>
+
+                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.flight_status.value }}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">{{ total_weight }}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">{{ passenger_count }}</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">
                     <a href="/main_dispatcher/download/{{ flight.id }}" style="color: #007bff; text-decoration: none; margin-right: 10px;">📄 Скачать</a>
                     <a href="/main_dispatcher/download-excel-tables/{{ flight.id }}" style="color: #28a745; text-decoration: none; margin-right: 10px;">📥 Таблицы</a>
+                    {% if flight.flight_status == flight_statuses.PLANNED %}
+                        
+                        <button type="button" 
+                            class="btn btn-success" 
+                            onclick="changeStatus({{ flight.id }}, '{{ flight_statuses.IN_PROGRESS.value }}')"
+                            style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                            {{ flight_statuses.IN_PROGRESS.value }}
+                        </button>
+                        <button type="button" 
+                            class="btn btn-success" 
+                            onclick="changeStatus({{ flight.id }}, '{{ flight_statuses.COMPLETED.value }}')"
+                            style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                            {{ flight_statuses.COMPLETED.value }}
+                        </button>
+                        
+                    {%elif flight.flight_status == flight_statuses.IN_PROGRESS %}
+                        <button type="button" 
+                            class="btn btn-success" 
+                            onclick="changeStatus({{ flight.id }}, '{{ flight_statuses.PLANNED.value }}')"
+                            style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                            {{ flight_statuses.PLANNED.value }}
+                        </button>
+                        <button type="button" 
+                            class="btn btn-success" 
+                            onclick="changeStatus({{ flight.id }}, '{{ flight_statuses.COMPLETED.value }}')"
+                            style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                            {{ flight_statuses.COMPLETED.value }}
+                        </button>
+                    {% else %}
+                    <td>
+                        <button type="button" 
+                            class="btn btn-success" 
+                            onclick="changeStatus({{ flight.id }}, '{{ flight_statuses.PLANNED.value }}')"
+                            style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                            {{ flight_statuses.PLANNED.value }}
+                        </button>
+                        <button type="button" 
+                            class="btn btn-success" 
+                            onclick="changeStatus({{ flight.id }}, '{{ flight_statuses.IN_PROGRESS.value }}')"
+                            style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                            {{ flight_statuses.IN_PROGRESS.value }}
+                        </button>
+                    </td>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -243,6 +299,24 @@ async function downloadSelected() {
     }
 }
 
+async function changeStatus(flightId, statusName) {
+    const response = await fetch(`/dispatcher/flights/${flightId}/change_status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        // Ключ "status" должен совпадать с именем аргумента в FastAPI
+        body: JSON.stringify({ status: statusName })
+    });
+
+    if (response.ok) {
+        location.reload(); // Перезагружаем для обновления кнопок
+    } else {
+        const err = await response.json();
+        console.error(err);
+        alert("Ошибка обновления: " + JSON.stringify(err.detail));
+    }
+}
 // // Функции для модального окна
 // function openCreateModal() {
 //     document.getElementById('createModal').style.display = 'block';

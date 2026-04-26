@@ -1,8 +1,15 @@
-from sqlalchemy import Column, Date, Integer, String, BigInteger, ForeignKey, Time
+import enum
+
+from sqlalchemy import Column, Date, Enum, Integer, String, BigInteger, ForeignKey, Time
 from sqlalchemy.orm import relationship
 from src.database import Base
 from src.models.aircraft_types import AircraftType
     
+class FlightPlaneStatus(enum.Enum):
+    PLANNED = "Планируется"
+    IN_PROGRESS = "выполняется"
+    COMPLETED = "выполнен"
+
 class Flight(Base):
     __tablename__ = "flights"
 
@@ -14,6 +21,7 @@ class Flight(Base):
     place_number = Column(Integer)
     route = Column(String)
     pilot_id = Column(Integer, ForeignKey("pilots.id"), nullable=True)
+    flight_status = Column(Enum(FlightPlaneStatus),nullable=False, default=FlightPlaneStatus.PLANNED)
     # flight_route_id = Column(Integer, ForeignKey("flight_routes.id"))
     # начальная и конечная точка - 2 ключа на филиалы
     # flight_date = Column(Date, nullable=False)
