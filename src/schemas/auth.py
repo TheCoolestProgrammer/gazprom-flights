@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from src.models.user import Role
 
 class UserLogin(BaseModel):
     login: str
@@ -10,7 +11,7 @@ class UserRegister(BaseModel):
     password: str
     name: str
     department_id:int
-
+    role: Role
 
 class Token(BaseModel):
     access_token: str

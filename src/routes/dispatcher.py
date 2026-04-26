@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Query, Request, Depends, Form, sta
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import aliased, joinedload
+from src.models.aircraft_types import AircraftType
 from src.models.pilot import Pilot
 from src.models.airport import Airport
 from src.models.passenger_flight import PassengerFlight
@@ -69,6 +70,8 @@ async def dashboard(
     # Чтобы значения в выпадающих списках соответствовали текущим заявкам
     all_requests = session.query(Passenger).filter(Passenger.done_status != RequestStatus.CONFIRMED).all()
     
+    
+
     unique_cities_from = set()
     unique_cities_to = set()
     # unique_director_statuses = set()
@@ -85,6 +88,7 @@ async def dashboard(
         #     unique_dispatcher_statuses.add((req.main_dispatcher_status.name, req.main_dispatcher_status.value))
     
     pilots = session.query(Pilot).all()
+    aircraft_types = session.query(AircraftType).all()
 
     return templates.TemplateResponse(
         request=request, 
@@ -105,6 +109,7 @@ async def dashboard(
             "unique_cities_to": sorted(list(unique_cities_to)),
             # "unique_director_statuses": sorted(list(unique_director_statuses)),
             # "unique_dispatcher_statuses": sorted(list(unique_dispatcher_statuses)),
+            "aircraft_types": aircraft_types
         }
     )
 

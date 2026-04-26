@@ -44,14 +44,14 @@ def generate_passenger_manifest_excel(flight: Flight, session: Session) -> bytes
     ws["E9"] = f"от {flight.departure_date.strftime('%d.%m.%Y')}"
     
     # Row 10: Aircraft type
-    ws["D10"] = f"ВС    {flight.aircraft_type}                                           RA"
+    ws["D10"] = f"ВС    {flight.aircraft_type_rel.name}                                           RA"
     
     # Row 11: Flight number
     ws["D11"] = f"№ рейса ГЗП   {flight.flight_number}"
     
     # Row 11: KVS (Pilot name)
     if flight.pilot:
-        ws["G11"] = flight.pilot.name
+        ws["G11"] = "КВС: "+flight.pilot.name
     
     # Row 12 already has headers, start filling from row 14 (or 15?)
     # Let me check: Row 12 has headers, so passengers start from row 13

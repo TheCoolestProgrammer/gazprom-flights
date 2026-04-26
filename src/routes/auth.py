@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Form, HTTPException, Request, Response, status
+from fastapi.params import Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from src.database import SessionDep
-from src.models.user import User
+from src.models.user import Role, User
 from src.schemas.auth import TokenRefresh, UserLogin, UserRegister, Token
 from src.schemas.user import UserResponse
 from src.security import (
@@ -56,7 +57,8 @@ def register(user_data: UserRegister, session: SessionDep):
         login=user_data.login,
         password_hash=hashed_password,
         name=user_data.name,
-        department_id=user_data.department_id
+        department_id=user_data.department_id,
+        role=user_data.role
     )
 
     session.add(user)

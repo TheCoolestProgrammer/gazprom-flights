@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -27,5 +27,17 @@ def get_session():
 
 def create_db_and_tables():
     Base.metadata.create_all(bind=engine)
+    with Session(engine) as session:
+        # Используем session.execute() и оборачиваем запрос в text()
+        query = text("select sum(id) from departments")
+        res = session.execute(query).scalar()
+        if not res:
+            query = text("INSERT INTO departments(name, phone) VALUES ('югорск', '123')")
+            session.execute(query)
+        
+        # 3. Фиксируем изменения
+        session.commit()
     # Base.metadata.drop_all(bind=engine)
+
+
 SessionDep = Annotated[Session, Depends(get_session)]

@@ -34,7 +34,7 @@ class FlightParseResponse(BaseModel):
 
 class FlightCreateForm(BaseModel):
     departure_date: date = Field(..., alias="departure_date")
-    aircraft_type: str = Field(..., alias="aircraft_type")
+    aircraft_type: int = Field(..., alias="aircraft_type")
     flight_number: int = Field(..., alias="flight_number")
     gzp: str = Field(..., alias="gzp")
     departure_time: time = Field(..., alias="departure_time")

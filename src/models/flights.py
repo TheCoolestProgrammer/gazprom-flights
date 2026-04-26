@@ -1,13 +1,13 @@
 from sqlalchemy import Column, Date, Integer, String, BigInteger, ForeignKey, Time
 from sqlalchemy.orm import relationship
 from src.database import Base
-
+from src.models.aircraft_types import AircraftType
     
 class Flight(Base):
     __tablename__ = "flights"
 
     id = Column(Integer, primary_key=True, index=True)
-    aircraft_type = Column(String)
+    aircraft_type = Column(Integer, ForeignKey("aircraft_types.id"), nullable=True)
     flight_number = Column(BigInteger)
     departure_date = Column(Date)
     departure_time = Column(Time)
@@ -20,6 +20,8 @@ class Flight(Base):
 
     passenger_flights = relationship("PassengerFlight", back_populates="flights")
     pilot = relationship("Pilot", back_populates="flights")
+    aircraft_type_rel = relationship("AircraftType", back_populates="flights")
+    
     # flight_routes = relationship("FlightRoute", back_populates="flights")
     def __str__(self):
         return self.route

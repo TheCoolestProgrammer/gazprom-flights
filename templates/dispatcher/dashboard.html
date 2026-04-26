@@ -171,10 +171,16 @@
             
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Тип воздушного судна:</label>
-                <input type="text" id="aircraft_type" placeholder="Ми-8амт" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <!-- <input type="text" id="aircraft_type" placeholder="Ми-8амт" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"> -->
+                <select id="aircraft_type" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- Выберите тип ВС --</option>
+                    {% for ac in aircraft_types %}
+                    <option value="{{ ac.id }}">{{ ac.name }}</option>
+                    {% endfor %}
+                </select>
             </div>
             
-            <div style="margin-bottom: 15px;">
+            <div style="margin-bottom: 25px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Бортовой номер:</label>
                 <input type="number" id="flight_number" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
