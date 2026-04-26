@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Новая заявка | Система Газпром{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <h2 style="color: var(--gz-dark); margin-bottom: 1.5rem; border-bottom: 2px solid var(--gz-blue); padding-bottom: 0.5rem;">
+        изменение заявки на перевозку
+    </h2>
+
+    <form action="/dispatcher/edit/{{passenger.id}}" method="post" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        
+        
+        <!-- ФИО с автодополнением -->
+        <div style="grid-column: span 2; position: relative;">
+            <label style="display:block; margin-bottom:5px;">ФИО сотрудника</label>
+            <input type="text" name="fullname" id="fullnameInput" required placeholder="Иванов Иван Иванович" 
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"
+                   value="{{passenger.fullname}}">
+            <div id="autocompleteList" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; border-top: none; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; z-index: 1000; display: none;"></div>
+        </div>
+
+        <!-- Паспорт -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">Серия и номер паспорта</label>
+            <input type="number" name="passport" id="passportInput" required placeholder="1234567890" value="{{passenger.passport}}"
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+        <!-- Дата рождения -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">Дата рождения</label>
+            <input type="date" name="birthdate" id="birthdateInput" required value = {{passenger.birthdate}}
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+
+        <!-- Пол -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">Пол</label>
+            <select name="gender" id="genderInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="муж">Мужской</option>
+                <option value="жен">Женский</option>
+            </select>
+        </div>
+
+        <!-- вес груза -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">Вес груза (кг)</label>
+            <input type="number" step="0.1" name="cargo_weight" id="cargoWeightInput" placeholder="0.0" 
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"
+                   value="{{passenger.cargo_weight}}">
+        </div>
+
+        <!-- принадлежит филиалу -->
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">принадлежит филиалу</label>
+            <select name="department_id" id="departmentInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="{{passenger.departments.id}}"  selected>{{passenger.departments.name}}</option>
+                {% for route in departments %}
+                    <option value="{{ route.id }}">{{ route.name }}</option>
+                {% endfor %}
+            </select>
+        </div>  
+        <!-- место отправления -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">место отправления</label>
+            <select name="flight_from" id="flightFromInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="{{passenger.flight_from_id}}" selected>{{passenger.flight_from.name}}</option>
+                {% for dept in airports %}
+                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- точка назначения -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">точка назначения</label>
+            <select name="flight_to" id="flightToInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="{{passenger.flight_to_id}}" selected>{{passenger.flight_to.name}}</option>
+                {% for route in airports %}
+                    <option value="{{ route.id }}">{{ route.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+
+        <!-- Планируемая дата -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">Планируемая дата</label>
+            <input type="date" name="planning_date" id="planningDateInput" required 
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"
+                   value="{{passenger.planning_date}}">
+        </div>
+        
+        <!-- номер заявки -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">номер заявки</label>
+            <input type="number" name="application_id" placeholder="номер заявки"
+                      style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; font-family: inherit; resize: vertical;"
+                      value="{{passenger.application_id}}">
+        </div>
+
+        <!-- Цель поездки -->
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">Цель поездки</label>
+            <select name="trip_purpose" id="tripPurposeInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="{{passenger.trip_purpose.value}}" selected>{{passenger.trip_purpose.value}}</option>
+                {% for purpose in TripPurpose %}
+                    <option value="{{ purpose.value }}">{{ purpose.value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- отношение к ГТЮ -->
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">отношение к ГТЮ</label>
+            <select name="gtu_relation" id="gtuRelationInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="{{passenger.gtu_relation.value}}"  selected>{{passenger.gtu_relation.value}}</option>
+                {% for relation in GTURelation %}
+                    <option value="{{ relation.value }}">{{ relation.value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- примечания -->
+        <div>
+            <label style="display:block; margin-bottom:5px;">примечания</label>
+            <input type="text" name="notes" value="{{passenger.notes}}"
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+        
+        <!-- Кнопки -->
+        <div style="grid-column: span 2; display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1; font-weight: bold;">
+                ОТПРАВИТЬ ЗАЯВКУ
+            </button>
+            <a href="/transport_dispatcher/" class="btn" style="background: #ccc; color: #333; text-align: center; line-height: 24px;">Отмена</a>
+        </div>
+        
+
+        
+    </form>
+</div>
+{% endblock %}

@@ -96,6 +96,10 @@
                         <th style="padding: 10px; border: 1px solid #ddd;">Откуда</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">Куда</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">ГТЮ</th>
+                        <th style="padding: 10px; border: 1px solid #ddd;">примечания</th>
+
+                        <th style="padding: 10px; border: 1px solid #ddd;">действие</th>
+
                         <!-- <th style="padding: 10px; border: 1px solid #ddd;">Статус директора</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">Статус диспетчера</th> -->
                     </tr>
@@ -117,6 +121,16 @@
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_from.name if req.flight_from else '-' }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_to.name if req.flight_to else '-' }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.gtu_relation.value if req.gtu_relation else '-' }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.notes if req.notes else '-' }}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                            <button type="button" 
+                                class="btn btn-danger" 
+                                onclick="window.location.href='edit/{{ req.id }}'"
+                                style="background: #53cede; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                                Редактировать
+                            </button>     
+                        </td>
+
                         <!-- <td style="padding: 8px; border: 1px solid #ddd;">
                             <span class="status-{{ req.department_director_status.name.lower() if req.department_director_status else 'unknown' }}">
                                 {{ req.department_director_status.value if req.department_director_status else '-' }}

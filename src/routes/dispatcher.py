@@ -11,7 +11,7 @@ from src.models.flights import Flight
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
 from src.models.user import User, Role
-from src.models.passenger import Passenger, RequestStatus,Gender , FlightStatus
+from src.models.passenger import GTURelation, Passenger, RequestStatus,Gender , FlightStatus, TripPurpose
 from src.models.department import Department
 from src.templates_config import templates
 import datetime
@@ -190,3 +190,67 @@ async def fly_passenger(
     session.commit()
     
     return RedirectResponse(url="/dispatcher/done", status_code=303)
+
+
+@router.get("/edit/{passenger_id}", response_class=HTMLResponse)
+async def edit_form(
+    request: Request,
+    passenger_id:int,
+    session: SessionDep, 
+    user: User = Depends(RoleChecker(Role.DISPATCHER))
+    ):
+    passenger = session.query(Passenger).filter(Passenger.id==passenger_id).first()
+    departments = session.query(Department).all()
+    # flight_routes = session.query(FlightRoute).all()
+    airports = session.query(Airport).all() 
+    return templates.TemplateResponse(request=request, name="dispatcher/edit.html", context={
+        "user": user,
+        "departments": departments,
+        "passenger":passenger,
+        "airports":airports,
+        # "flight_routes":flight_routes
+        "TripPurpose":TripPurpose,
+        "GTURelation":GTURelation
+    })
+
+@router.post("/edit/{passenger_id}")
+async def edit_request(
+    request: Request,
+    session: SessionDep,
+    passenger_id:int,
+    fullname: str = Form(...),
+    passport: int = Form(...),
+    flight_from: int = Form(...),
+    birthdate: str = Form(...),
+    gender: Gender = Form(...),
+    trip_purpose: TripPurpose = Form(...),
+    planning_date: str = Form(...),
+    flight_to: int = Form(...),
+    cargo_weight:float = Form(None),
+    gtu_relation:GTURelation = Form(...),
+    department_id:int = Form(...),
+    application_id: str = Form(...),
+
+    notes:str = Form(None),
+    user: User = Depends(RoleChecker(Role.DISPATCHER))
+):
+    passenger = session.get(Passenger, passenger_id)
+    
+    passenger.fullname=fullname
+    passenger.passport=passport
+    passenger.flight_from_id=flight_from
+    passenger.birthdate=birthdate # Нужна конвертация в date объект
+    passenger.gender=gender
+    passenger.trip_purpose=trip_purpose
+    passenger.status=RequestStatus.PENDING
+    passenger.created_by=user.id
+    passenger.planning_date=planning_date
+    passenger.flight_to_id=flight_to
+    passenger.cargo_weight=cargo_weight
+    passenger.gtu_relation=gtu_relation
+    passenger.department_id = department_id
+    passenger.application_id = application_id
+    passenger.notes=notes
+
+    session.commit()
+    return RedirectResponse(url="/dispatcher/", status_code=303)
