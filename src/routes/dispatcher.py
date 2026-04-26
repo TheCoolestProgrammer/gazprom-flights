@@ -254,3 +254,14 @@ async def edit_request(
 
     session.commit()
     return RedirectResponse(url="/dispatcher/", status_code=303)
+
+
+@router.get("/flights", response_class=HTMLResponse)
+async def flights_page(request: Request, db: SessionDep):
+    flights = db.query(Flight).order_by(Flight.departure_date.desc()).all()
+    pilots = db.query(Pilot).all()
+    return templates.TemplateResponse(request=request, name="dispatcher/flights.html", context={
+        "flights": flights,
+        "pilots": pilots
+    })
+
