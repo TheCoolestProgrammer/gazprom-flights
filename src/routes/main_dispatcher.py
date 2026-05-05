@@ -75,7 +75,7 @@ async def edit_request(
     trip_purpose: TripPurpose = Form(...),
     planning_date: str = Form(...),
     flight_to: int = Form(...),
-    cargo_weight:float = Form(...),
+    cargo_weight:float = Form(default=None),
     gtu_relation:GTURelation = Form(...),
     department_id:int = Form(...),
     notes:Optional[str] = Form(None),
