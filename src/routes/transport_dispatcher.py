@@ -61,7 +61,7 @@ async def create_request(
     flight_to: int = Form(...),
     cargo_weight:Optional[float] = Form(default=None),
     gtu_relation:GTURelation = Form(...),
-    department_id:int = Form(...),
+    # department_id:int = Form(...),
     application_id: str = Form(...),
     user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
 ):
@@ -78,7 +78,8 @@ async def create_request(
         flight_from_id=flight_from,
         cargo_weight=cargo_weight,
         gtu_relation=gtu_relation,
-        department_id=department_id,
+        # department_id=department_id,
+        department_id=user.department_id,
         application_id=application_id
     )
     session.add(new_passenger)
@@ -122,7 +123,7 @@ async def edit_request(
     flight_to: int = Form(...),
     cargo_weight:float = Form(None),
     gtu_relation:GTURelation = Form(...),
-    department_id:int = Form(...),
+    # department_id:int = Form(...),
     application_id: str = Form(...),
 
     # notes:str = Form(...),
@@ -142,7 +143,7 @@ async def edit_request(
     passenger.flight_to_id=flight_to
     passenger.cargo_weight=cargo_weight
     passenger.gtu_relation=gtu_relation
-    passenger.department_id = department_id
+    passenger.department_id = user.department_id
     passenger.application_id = application_id
     # passenger.notes=notes
 

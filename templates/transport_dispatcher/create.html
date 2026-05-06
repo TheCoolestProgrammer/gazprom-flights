@@ -46,12 +46,15 @@
 
         <div style="grid-column: span 2;">
             <label style="display:block; margin-bottom:5px; font-weight: 500;">Принадлежит филиалу</label>
-            <select name="department_id" id="departmentInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+            <input type="text" step="0.1" name="department_id" id="departmentInput" placeholder="Название филиала" 
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"
+                   disabled value="{{user.departments.name}}">
+            <!-- <select name="department_id" id="departmentInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="" disabled selected>Выберите филиал</option>
                 {% for route in departments %}
                     <option value="{{ route.id }}">{{ route.name }}</option>
-                {% endfor %}
-            </select>
+                {% endfor %} -->
+            <!-- </select> -->
         </div>
 
         <div>
