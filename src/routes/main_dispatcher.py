@@ -78,7 +78,8 @@ async def edit_request(
     cargo_weight:float = Form(default=None),
     gtu_relation:GTURelation = Form(...),
     department_id:int = Form(...),
-    notes:Optional[str] = Form(None),
+    main_dispatcher_date: str = Form(default=None),
+    notes:Optional[str] = Form(default=None),
     user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
 ):
     passenger = session.get(Passenger, passenger_id)
@@ -96,8 +97,9 @@ async def edit_request(
     passenger.cargo_weight=cargo_weight
     passenger.gtu_relation=gtu_relation
     passenger.department_id = department_id
-    if notes:
-        passenger.notes=notes
+ 
+    passenger.main_dispatcher_date = main_dispatcher_date
+    passenger.notes=notes
 
     session.commit()
     return RedirectResponse(url="/main_dispatcher/", status_code=303)
@@ -107,7 +109,7 @@ async def change_status(
     request: Request,
     session: SessionDep,
     passenger_id:int,
-    planning_date: date = Body(None),
+    main_dispatcher_date: date = Body(None),
     request_status:RequestStatus = Body(..., embed=True),
     user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
     ):
@@ -121,8 +123,8 @@ async def change_status(
     # try:
     passenger.main_dispatcher_status = request_status
 
-    if planning_date:
-        passenger.planning_date = planning_date
+    if main_dispatcher_date:
+        passenger.main_dispatcher_date = main_dispatcher_date
 
     session.commit()
     

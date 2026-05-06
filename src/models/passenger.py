@@ -65,6 +65,7 @@ class Passenger(Base):
     notes = Column(Text, default="")
     request_date = Column(Date, default=datetime.datetime.now)
     planning_date = Column(Date)
+    main_dispatcher_date = Column(Date)
     department_director_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
     main_dispatcher_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
     done_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)

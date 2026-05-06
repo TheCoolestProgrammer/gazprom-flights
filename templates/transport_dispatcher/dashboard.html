@@ -54,7 +54,7 @@
                             {% if req.passenger_flights and req.passenger_flights|length > 0 %}
                                 {{ req.passenger_flights[0].flights.departure_date|format_date_ru }}
                             {%else%}
-                                {{ req.planning_date|format_date_ru }}  
+                                {{ req.main_dispatcher_date|format_date_ru }}  
                             {% endif %}
                         {%else%}
                             {{ req.main_dispatcher_status.value }}

@@ -24,6 +24,7 @@
                 <th>откуда</th>
                 <th>куда</th>
                 <th>планируемая дата</th>
+                <th>дата согласования СОВП</th>
                 <!-- <th>Статус директора</th> -->
                 <th>статус СОВП</th>
                 <th>Действия</th>
@@ -40,6 +41,7 @@
                 <td>{{ req.flight_from.name}}</td>
                 <td>{{ req.flight_to.name}}</td>
                 <td>{{ req.planning_date|format_date_ru }}</td>
+                <td>{{ req.main_dispatcher_date|format_date_ru }}</td>
                 <!-- <td>
                     <span class="status-{{ req.department_director_status.name.lower() }}">
                         {{ req.department_director_status.value }}
@@ -279,7 +281,7 @@ async function submitPlanningDate() {
     // Здесь мы отправляем и дату, и новый статус одновременно
     const payload = {
         "request_status": "{{Status.CONFIRMED.value}}", // Передаем статус "Согласовано"
-        "planning_date": planningDate
+        "main_dispatcher_date": planningDate
     };
 
     await send_status_update(requestId, payload);
@@ -295,6 +297,7 @@ async function send_status_update(passengerId, data) {
         });
 
         if (response.ok) {
+            // console.log(data)
             window.location.reload(); 
         } else {
             const errorData = await response.json();
