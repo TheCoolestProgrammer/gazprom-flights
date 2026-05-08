@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy.orm import aliased
 from src.models.airport import Airport
 from src.models.pilot import Pilot
+from src.models.aircraft_types import AircraftType
 from src.crud.flight import create_flights_bulk
 from src.crud.excel_generator import generate_both_excel_files
 from src.database import SessionDep
@@ -279,12 +280,62 @@ async def upload_flights_docx(
         )
 
 @router.get("/flights", response_class=HTMLResponse)
-async def flights_page(request: Request, db: SessionDep):
-    flights = db.query(Flight).order_by(Flight.departure_date.desc()).all()
+async def flights_page(
+    request: Request,
+    db: SessionDep,
+    departure_date: Optional[str] = Query(None, description="Дата вылета"),
+    route: Optional[str] = Query(None, description="Маршрут"),
+    flight_number: Optional[str] = Query(None, description="Номер рейса"),
+    aircraft_type: Optional[str] = Query(None, description="Тип ВС"),
+    flight_status: Optional[str] = Query(None, description="Статус рейса"),
+):
+    flight_query = db.query(Flight)
+    if departure_date:
+        try:
+            departure_date_obj = datetime.strptime(departure_date, "%Y-%m-%d").date()
+            flight_query = flight_query.filter(Flight.departure_date == departure_date_obj)
+        except ValueError:
+            pass
+
+    if route:
+        flight_query = flight_query.filter(Flight.route.ilike(f"%{route}%"))
+
+    if flight_number:
+        try:
+            flight_number_value = int(flight_number)
+            flight_query = flight_query.filter(Flight.flight_number == flight_number_value)
+        except ValueError:
+            pass
+
+    if aircraft_type:
+        try:
+            aircraft_type_value = int(aircraft_type)
+            flight_query = flight_query.filter(Flight.aircraft_type == aircraft_type_value)
+        except ValueError:
+            pass
+
+    if flight_status:
+        try:
+            flight_status_value = FlightPlaneStatus(flight_status)
+            flight_query = flight_query.filter(Flight.flight_status == flight_status_value)
+        except ValueError:
+            pass
+
+    flights = flight_query.order_by(Flight.departure_date.desc()).all()
     pilots = db.query(Pilot).all()
+    aircraft_types = db.query(AircraftType).all()
     return templates.TemplateResponse(request=request, name="main_dispatcher/flights.html", context={
         "flights": flights,
-        "pilots": pilots
+        "pilots": pilots,
+        "filters": {
+            "departure_date": departure_date,
+            "route": route,
+            "flight_number": flight_number,
+            "aircraft_type": aircraft_type,
+            "flight_status": flight_status,
+        },
+        "aircraft_types": aircraft_types,
+        "flight_statuses": FlightPlaneStatus,
     })
 
 @router.post("/create-from-form", response_model=dict)

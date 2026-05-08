@@ -20,6 +20,46 @@
         </div>
     </div>
 
+    <!-- Блок фильтров -->
+    <form method="GET" action="" style="margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+            <div>
+                <label style="font-weight: bold;">Дата вылета:</label><br>
+                <input type="date" name="departure_date" value="{{ filters.departure_date or '' }}" style="width: 100%; padding: 5px;">
+            </div>
+            <div>
+                <label style="font-weight: bold;">Маршрут:</label><br>
+                <input type="text" name="route" value="{{ filters.route or '' }}" placeholder="Поиск по маршруту" style="width: 100%; padding: 5px;">
+            </div>
+            <div>
+                <label style="font-weight: bold;">Номер рейса:</label><br>
+                <input type="number" name="flight_number" value="{{ filters.flight_number or '' }}" placeholder="Номер рейса" style="width: 100%; padding: 5px;">
+            </div>
+            <div>
+                <label style="font-weight: bold;">Тип ВС:</label><br>
+                <select name="aircraft_type" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for aircraft in aircraft_types %}
+                    <option value="{{ aircraft.id }}" {% if filters.aircraft_type == aircraft.id|string %}selected{% endif %}>{{ aircraft.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="font-weight: bold;">Статус рейса:</label><br>
+                <select name="flight_status" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for status in flight_statuses %}
+                    <option value="{{ status.value }}" {% if filters.flight_status == status.value %}selected{% endif %}>{{ status.value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: flex-end;">
+                <button type="submit" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Применить</button>
+                <a href="?" style="text-decoration: none; padding: 8px 16px; background: #6c757d; color: white; border-radius: 4px;">Сбросить</a>
+            </div>
+        </div>
+    </form>
+
     <!-- Кнопки для массового выбора -->
     <div style="margin-bottom: 15px;">
         <button type="button" onclick="selectAll()" style="background: #6c757d; color: white; padding: 5px 15px; border: none; border-radius: 4px; cursor: pointer;">Выбрать все</button>

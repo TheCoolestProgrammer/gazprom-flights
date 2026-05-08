@@ -326,7 +326,15 @@ async def edit_flight_request(
 
 
 @router.get("/flights", response_class=HTMLResponse)
-async def flights_page(request: Request, db: SessionDep):
+async def flights_page(
+    request: Request,
+    db: SessionDep,
+    departure_date: Optional[str] = Query(None, description="Дата вылета"),
+    route: Optional[str] = Query(None, description="Маршрут"),
+    flight_number: Optional[str] = Query(None, description="Номер рейса"),
+    aircraft_type: Optional[str] = Query(None, description="Тип ВС"),
+    flight_status: Optional[str] = Query(None, description="Статус рейса"),
+):
     # Создаем подзапрос для подсчета агрегатов по каждому рейсу
     # Используем outerjoin, чтобы не потерять рейсы без пассажиров
     stats_query = (
@@ -340,15 +348,48 @@ async def flights_page(request: Request, db: SessionDep):
         .subquery()
     )
 
+    flight_query = db.query(Flight, stats_query.c.p_count, stats_query.c.total_weight)
+    if departure_date:
+        try:
+            departure_date_obj = datetime.datetime.strptime(departure_date, "%Y-%m-%d").date()
+            flight_query = flight_query.filter(Flight.departure_date == departure_date_obj)
+        except ValueError:
+            pass
+
+    if route:
+        flight_query = flight_query.filter(Flight.route.ilike(f"%{route}%"))
+
+    if flight_number:
+        try:
+            flight_number_value = int(flight_number)
+            flight_query = flight_query.filter(Flight.flight_number == flight_number_value)
+        except ValueError:
+            pass
+
+    if aircraft_type:
+        try:
+            aircraft_type_value = int(aircraft_type)
+            flight_query = flight_query.filter(Flight.aircraft_type == aircraft_type_value)
+        except ValueError:
+            pass
+
+    if flight_status:
+        try:
+            flight_status_value = FlightPlaneStatus(flight_status)
+            flight_query = flight_query.filter(Flight.flight_status == flight_status_value)
+        except ValueError:
+            pass
+
     # Присоединяем подзапрос к основной модели Flight
     flights_with_stats = (
-        db.query(Flight, stats_query.c.p_count, stats_query.c.total_weight)
+        flight_query
         .outerjoin(stats_query, Flight.id == stats_query.c.flight_id)
         .order_by(Flight.departure_date.desc())
         .all()
     )
 
     pilots = db.query(Pilot).all()
+    aircraft_types = db.query(AircraftType).all()
     
     return templates.TemplateResponse(
         request=request, 
@@ -356,7 +397,15 @@ async def flights_page(request: Request, db: SessionDep):
         context={
             "flights": flights_with_stats,  # Теперь это список кортежей (Flight, count, weight)
             "pilots": pilots,
-            "flight_statuses": FlightPlaneStatus
+            "flight_statuses": FlightPlaneStatus,
+            "filters": {
+                "departure_date": departure_date,
+                "route": route,
+                "flight_number": flight_number,
+                "aircraft_type": aircraft_type,
+                "flight_status": flight_status,
+            },
+            "aircraft_types": aircraft_types,
         }
     )
 
