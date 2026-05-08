@@ -123,7 +123,17 @@
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_from.name if req.flight_from else '-' }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_to.name if req.flight_to else '-' }}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">{{ req.gtu_relation.value if req.gtu_relation else '-' }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.notes if req.notes else '-' }}</td>
+                        <!-- <td style="padding: 8px; border: 1px solid #ddd;">{{ req.notes if req.notes else '-' }}</td> -->
+                        <td style="padding: 8px; border: 1px solid #ddd;">
+                            {% if req.notes %}
+                                <div class="notes-preview"
+                                    onclick="openNotesModal(`{{ req.notes | replace('`', '\\`') | replace('\n', '<br>') }}`)">
+                                    {{ req.notes[:40] }}{% if req.notes|length > 40 %}...{% endif %}
+                                </div>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
                         <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
                             <button type="button" 
                                 class="btn btn-danger" 
@@ -225,9 +235,20 @@
         <div id="createResult" style="margin-top: 20px; display: none;"></div>
     </div>
 </div>
+<!-- Модальное окно примечаний -->
+<div id="notesModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Примечание</h3>
+            <span class="close" onclick="closeNotesModal()">&times;</span>
+        </div>
+
+        <div id="notesModalBody" class="notes-full-text"></div>
+    </div>
+</div>
 <script>
-    // Чекбокс "Выбрать все"
-    const selectAllCheckbox = document.getElementById('select-all');
+// Чекбокс "Выбрать все"
+const selectAllCheckbox = document.getElementById('select-all');
     if (selectAllCheckbox) {
         selectAllCheckbox.onclick = function() {
             const checkboxes = document.getElementsByName('selected_ids');
@@ -254,8 +275,22 @@ window.onclick = function(event) {
     if (event.target === modal) {
         closeCreateModal();
     }
+    const notesModal = document.getElementById('notesModal');
+
+    if (event.target === notesModal) {
+        closeNotesModal();
+    }
+}
+// Открытие модального окна примечаний
+function openNotesModal(text) {
+    document.getElementById('notesModalBody').innerHTML = text;
+    document.getElementById('notesModal').style.display = 'block';
 }
 
+// Закрытие модального окна примечаний
+function closeNotesModal() {
+    document.getElementById('notesModal').style.display = 'none';
+}
 // Обработка отправки формы
 document.getElementById('createFlightForm').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -347,6 +382,59 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     button[type="submit"]:hover {
         opacity: 0.9;
+    }
+    .notes-preview {
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    color: #007bff;
+    }
+
+    .notes-preview:hover {
+        text-decoration: underline;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background: white;
+        width: 70%;
+        max-width: 800px;
+        margin: 5% auto;
+        border-radius: 8px;
+        padding: 20px;
+        animation: fadeIn 0.2s ease-in-out;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .close {
+        font-size: 28px;
+        cursor: pointer;
+    }
+
+    .notes-full-text {
+        max-height: 70vh;
+        overflow-y: auto;
+        line-height: 1.5;
+        white-space: normal;
+        word-break: break-word;
     }
 </style>
 {% endblock %}
