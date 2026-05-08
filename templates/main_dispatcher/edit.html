@@ -54,12 +54,15 @@
         <!-- принадлежит филиалу -->
         <div style="grid-column: span 2;">
             <label style="display:block; margin-bottom:5px;">принадлежит филиалу</label>
-            <select name="department_id" id="departmentInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+            <input type="text" step="0.1" name="department_id" id="departmentInput" placeholder="Название филиала" 
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;"
+                   disabled value="{{passenger.departments.name}}">
+            <!-- <select name="department_id" id="departmentInput" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
                 <option value="{{passenger.departments.id}}"  selected>{{passenger.departments.name}}</option>
                 {% for route in departments %}
                     <option value="{{ route.id }}">{{ route.name }}</option>
                 {% endfor %}
-            </select>
+            </select> -->
         </div>  
         <!-- место отправления -->
         <div>

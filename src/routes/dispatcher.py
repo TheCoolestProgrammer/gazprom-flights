@@ -234,7 +234,7 @@ async def edit_request(
     flight_to: int = Form(...),
     cargo_weight:float = Form(None),
     gtu_relation:GTURelation = Form(...),
-    department_id:int = Form(...),
+    # department_id:int = Form(...),
     application_id: str = Form(...),
 
     notes:str = Form(None),
@@ -254,12 +254,75 @@ async def edit_request(
     passenger.flight_to_id=flight_to
     passenger.cargo_weight=cargo_weight
     passenger.gtu_relation=gtu_relation
-    passenger.department_id = department_id
+    # passenger.department_id = department_id
     passenger.application_id = application_id
     passenger.notes=notes
 
     session.commit()
     return RedirectResponse(url="/dispatcher/", status_code=303)
+
+@router.get("/edit_flight/{flight_id}", response_class=HTMLResponse)
+async def edit_flight_form(
+    request: Request,
+    flight_id: int,
+    session: SessionDep,
+    user: User = Depends(RoleChecker(Role.DISPATCHER))
+):
+    flight = session.get(Flight, flight_id)
+    if not flight:
+        raise HTTPException(status_code=404, detail="Рейс не найден")
+
+    pilots = session.query(Pilot).all()
+    aircraft_types = session.query(AircraftType).all()
+
+    return templates.TemplateResponse(request=request, name="dispatcher/edit_flight.html", context={
+        "user": user,
+        "flight": flight,
+        "pilots": pilots,
+        "aircraft_types": aircraft_types,
+        "flight_statuses": FlightPlaneStatus
+    })
+
+@router.post("/edit_flight/{flight_id}")
+async def edit_flight_request(
+    request: Request,
+    session: SessionDep,
+    flight_id: int,
+    aircraft_type: int = Form(...),
+    flight_number: int = Form(...),
+    departure_date: str = Form(...),
+    departure_time: str = Form(...),
+    place_number: int = Form(...),
+    route: str = Form(...),
+    pilot_id: str | None = Form(None),
+    notes: str = Form(None),
+    # flight_status: FlightPlaneStatus = Form(...),
+    user: User = Depends(RoleChecker(Role.DISPATCHER))
+):
+    flight = session.get(Flight, flight_id)
+    if not flight:
+        raise HTTPException(status_code=404, detail="Рейс не найден")
+
+    if pilot_id:
+        try:
+            pilot_id_value = int(pilot_id)
+        except ValueError:
+            pilot_id_value = None
+    else:
+        pilot_id_value = None
+
+    flight.aircraft_type = aircraft_type
+    flight.flight_number = flight_number
+    flight.departure_date = datetime.datetime.strptime(departure_date, "%Y-%m-%d").date()
+    flight.departure_time = datetime.time.fromisoformat(departure_time)
+    flight.place_number = place_number
+    flight.route = route
+    flight.pilot_id = pilot_id_value
+    flight.notes = notes
+    # flight.flight_status = flight_status
+
+    session.commit()
+    return RedirectResponse(url="/dispatcher/flights", status_code=303)
 
 
 @router.get("/flights", response_class=HTMLResponse)

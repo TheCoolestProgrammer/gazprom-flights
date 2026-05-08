@@ -77,7 +77,7 @@ async def edit_request(
     flight_to: int = Form(...),
     cargo_weight:float = Form(default=None),
     gtu_relation:GTURelation = Form(...),
-    department_id:int = Form(...),
+    # department_id:int = Form(...),
     main_dispatcher_date: str = Form(default=None),
     notes:Optional[str] = Form(default=None),
     user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
@@ -96,7 +96,7 @@ async def edit_request(
     passenger.flight_to_id=flight_to
     passenger.cargo_weight=cargo_weight
     passenger.gtu_relation=gtu_relation
-    passenger.department_id = department_id
+    # passenger.department_id = department_id
  
     passenger.main_dispatcher_date = main_dispatcher_date
     passenger.notes=notes
@@ -257,6 +257,7 @@ async def create_flight_from_form(
             place_number=flight_data.place_number,
             route=flight_data.route,
             pilot_id=flight_data.pilot_id,
+            notes=flight_data.notes
             # flight_status = FlightStatus.PLANNED.value
         )
         db.add(new_flight)

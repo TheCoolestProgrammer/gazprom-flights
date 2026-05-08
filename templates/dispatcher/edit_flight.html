@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование рейса | Система Газпром{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color: var(--gz-dark); margin-bottom: 0;">Редактирование рейса</h2>
+    </div>
+
+    <form action="/dispatcher/edit_flight/{{ flight.id }}" method="post" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div>
+            <label style="display:block; margin-bottom:5px;">Тип воздушного судна</label>
+            <select name="aircraft_type" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="{{ flight.aircraft_type }}" selected>{{ flight.aircraft_type_rel.name if flight.aircraft_type_rel else 'Выберите тип' }}</option>
+                {% for aircraft in aircraft_types %}
+                <option value="{{ aircraft.id }}">{{ aircraft.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label style="display:block; margin-bottom:5px;">Номер рейса</label>
+            <input type="number" name="flight_number" required placeholder="123" value="{{ flight.flight_number }}"
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+        <div>
+            <label style="display:block; margin-bottom:5px;">Дата вылета</label>
+            <input type="date" name="departure_date" required value="{{ flight.departure_date }}"
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+        <div>
+            <label style="display:block; margin-bottom:5px;">Время вылета</label>
+            <input type="time" name="departure_time" required value="{{ flight.departure_time }}"
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+        <div>
+            <label style="display:block; margin-bottom:5px;">Количество мест</label>
+            <input type="number" name="place_number" required value="{{ flight.place_number }}"
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+        <div>
+            <label style="display:block; margin-bottom:5px;">Маршрут</label>
+            <input type="text" name="route" required value="{{ flight.route }}"
+                   placeholder="СОЙ-ПЭК-ХЛМ-СОЙ-пасс" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>
+
+        <div>
+            <label style="display:block; margin-bottom:5px;">Пилот</label>
+            <select name="pilot_id" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="" {% if not flight.pilot_id %}selected{% endif %}>Не назначен</option>
+                {% for pilot in pilots %}
+                <option value="{{ pilot.id }}" {% if flight.pilot_id == pilot.id %}selected{% endif %}>{{ pilot.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">Примечания</label>
+            <input type="text" name="notes" required value="{{ flight.notes }}"
+                   placeholder="примечания" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
+        </div>  
+        <!-- <div style="grid-column: span 2;">
+            <label style="display:block; margin-bottom:5px;">Статус рейса</label>
+            <select name="flight_status" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
+                <option value="{{ flight.flight_status.value }}" selected>{{ flight.flight_status.value }}</option>
+                {% for status in flight_statuses %}
+                <option value="{{ status.value }}">{{ status.value }}</option>
+                {% endfor %}
+            </select>
+        </div> -->
+
+        <div style="grid-column: span 2; display: flex; gap: 10px; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1; font-weight: bold;">
+                Сохранить рейс
+            </button>
+            <a href="/dispatcher/flights" class="btn" style="background: #ccc; color: #333; text-align: center; line-height: 24px;">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

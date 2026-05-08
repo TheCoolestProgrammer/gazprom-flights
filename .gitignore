@@ -11,3 +11,4 @@ wheels/
 .env
 
 postgres_data
+generated_docx

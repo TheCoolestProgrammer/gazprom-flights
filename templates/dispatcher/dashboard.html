@@ -215,6 +215,11 @@
                 <input type="text" id="route" placeholder="СОЙ-ПЭК-ХЛМ-СОЙ-пасс" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                 <small>Формат: точка1-точка2-...-тип_полёта (пасс, груз, пасс+груз)</small>
             </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">примечания</label>
+                <input type="text" id="notes" placeholder="примечания" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
             
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Пилот (КВС):</label>
@@ -304,7 +309,8 @@ document.getElementById('createFlightForm').addEventListener('submit', async fun
         departure_time: document.getElementById('departure_time').value,
         place_number: parseInt(document.getElementById('place_number').value),
         route: document.getElementById('route').value,
-        pilot_id: pilotIdValue ? parseInt(pilotIdValue) : null
+        pilot_id: pilotIdValue ? parseInt(pilotIdValue) : null,
+        notes: document.getElementById('notes').value
     };
     
     const submitBtn = this.querySelector('button[type="submit"]');

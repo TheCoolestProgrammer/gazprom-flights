@@ -41,7 +41,7 @@ class FlightCreateForm(BaseModel):
     place_number: int = Field(..., alias="place_number")
     route: str = Field(..., alias="route")
     pilot_id: Optional[int] = Field(None, alias="pilot_id")
-    
+    notes: Optional[str] = Field(None, alias="notes")
     class Config:
         populate_by_name = True  # позво
 

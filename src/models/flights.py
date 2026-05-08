@@ -22,6 +22,7 @@ class Flight(Base):
     route = Column(String)
     pilot_id = Column(Integer, ForeignKey("pilots.id"), nullable=True)
     flight_status = Column(Enum(FlightPlaneStatus),nullable=False, default=FlightPlaneStatus.PLANNED)
+    notes = Column(String, nullable=True)
     # flight_route_id = Column(Integer, ForeignKey("flight_routes.id"))
     # начальная и конечная точка - 2 ключа на филиалы
     # flight_date = Column(Date, nullable=False)
