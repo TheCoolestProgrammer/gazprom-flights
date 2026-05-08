@@ -2,8 +2,9 @@ from datetime import datetime
 import os
 from typing import Optional
 
-from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, Response, status,UploadFile, File
+from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, Response, status,UploadFile, File, Query
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from sqlalchemy.orm import aliased
 from src.models.airport import Airport
 from src.models.pilot import Pilot
 from src.crud.flight import create_flights_bulk
@@ -14,7 +15,7 @@ from src.dependencies import get_current_user, RoleChecker
 from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
 from src.models.department import Department
-from src.models.flights import Flight, FlightPlaneStatus
+from sqlalchemy import case, cast, String
 from src.schemas.flight import FlightCreate, FlightCreateForm, FlightResponse, FlightParseResponse, SelectedFlightsRequest
 from src.parsers.docs_parser import parse_flight_docx
 from docx import Document
@@ -22,6 +23,7 @@ from io import BytesIO
 from src.templates_config import templates
 import zipfile
 from datetime import date
+from src.models.flights import Flight, FlightPlaneStatus
 
 router = APIRouter(prefix="/main_dispatcher", tags=["main_dispatcher"])
 
@@ -30,13 +32,74 @@ router = APIRouter(prefix="/main_dispatcher", tags=["main_dispatcher"])
 async def dashboard(
     request: Request,
     session: SessionDep,
-    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
-    ):
-    requests = session.query(Passenger).filter(Passenger.department_director_status==RequestStatus.CONFIRMED).order_by(Passenger.request_date.desc()).all()
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR)),
+    # Параметры фильтрации
+    planning_date: Optional[str] = Query(None, description="Желаемая дата"),
+    flight_from: Optional[str] = Query(None, description="Откуда"),
+    flight_to: Optional[str] = Query(None, description="Куда"),
+    fullname: Optional[str] = Query(None, description="ФИО"),
+    passport: Optional[str] = Query(None, description="Паспорт"),
+):
+    # Базовый запрос заявок
+    query = session.query(Passenger).filter(Passenger.department_director_status == RequestStatus.CONFIRMED)
+    airport_from = aliased(Airport)
+    airport_to = aliased(Airport)
+
+    # Применяем фильтры
+    if planning_date:
+        try:
+            planning_date_obj = datetime.strptime(planning_date, "%Y-%m-%d").date()
+            query = query.filter(Passenger.planning_date == planning_date_obj)
+        except ValueError:
+            pass  # Игнорируем неверный формат даты
+    
+    if flight_from:
+        query = query.join(airport_from, Passenger.flight_from).filter(airport_from.name == flight_from)
+
+    if flight_to:
+        query = query.join(airport_to, Passenger.flight_to).filter(airport_to.name == flight_to)
+
+    if fullname:
+        query = query.filter(Passenger.fullname.ilike(f"%{fullname}%"))
+
+    if passport:
+        query = query.filter(cast(Passenger.passport, String).ilike(f"%{passport}%"))
+
+    # Сортируем: сначала рассматриваемые (PENDING), потом рассмотренные (CONFIRMED, REJECTED)
+    # Используем case для кастомной сортировки
+    status_order = case(
+        (Passenger.main_dispatcher_status == RequestStatus.PENDING, 1),
+        (Passenger.main_dispatcher_status == RequestStatus.CONFIRMED, 2),
+        (Passenger.main_dispatcher_status == RequestStatus.REJECTED, 3),
+        else_=4
+    )
+    requests = query.order_by(status_order, Passenger.request_date.desc()).all()
+    
+    # Получаем уникальные значения для фильтров
+    all_requests = session.query(Passenger).filter(Passenger.department_director_status == RequestStatus.CONFIRMED).all()
+    
+    unique_cities_from = set()
+    unique_cities_to = set()
+    
+    for req in all_requests:
+        if req.flight_from:
+            unique_cities_from.add(req.flight_from.name)
+        if req.flight_to:
+            unique_cities_to.add(req.flight_to.name)
+    
     return templates.TemplateResponse(request=request, name="main_dispatcher/dashboard.html", context={
         "user": user,
         "requests": requests,
-        "Status":RequestStatus
+        "Status": RequestStatus,
+        "filters": {
+            "planning_date": planning_date,
+            "flight_from": flight_from,
+            "flight_to": flight_to,
+            "fullname": fullname,
+            "passport": passport,
+        },
+        "unique_cities_from": sorted(list(unique_cities_from)),
+        "unique_cities_to": sorted(list(unique_cities_to)),
     })
 
 

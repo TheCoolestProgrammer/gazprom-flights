@@ -12,6 +12,52 @@
             📄 Загрузить заявку (DOCX)
         </button>
     </div>
+
+    <!-- Блок фильтров -->
+    <form method="GET" action="" style="margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div>
+                <label style="font-weight: bold;">Желаемая дата:</label><br>
+                <input type="date" name="planning_date" value="{{ filters.planning_date or '' }}" style="width: 100%; padding: 5px;">
+            </div>
+            
+            <div>
+                <label style="font-weight: bold;">Откуда:</label><br>
+                <select name="flight_from" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for city in unique_cities_from %}
+                        <option value="{{ city }}" {% if filters.flight_from == city %}selected{% endif %}>{{ city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label style="font-weight: bold;">Куда:</label><br>
+                <select name="flight_to" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for city in unique_cities_to %}
+                        <option value="{{ city }}" {% if filters.flight_to == city %}selected{% endif %}>{{ city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label style="font-weight: bold;">ФИО:</label><br>
+                <input type="text" name="fullname" value="{{ filters.fullname or '' }}" placeholder="Поиск по ФИО" style="width: 100%; padding: 5px;">
+            </div>
+            
+            <div>
+                <label style="font-weight: bold;">Паспорт:</label><br>
+                <input type="text" name="passport" value="{{ filters.passport or '' }}" placeholder="Поиск по паспорту" style="width: 100%; padding: 5px;">
+            </div>
+            
+            <div style="display: flex; gap: 10px; align-items: flex-end;">
+                <button type="submit" style="background: #007bff; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer;">Применить</button>
+                <a href="?" style="text-decoration: none; padding: 5px 15px; background: #6c757d; color: white; border-radius: 4px;">Сбросить</a>
+            </div>
+        </div>
+    </form>
+
     <div class="table-wrapper">
     <table>
         <thead>

@@ -21,7 +21,7 @@ async def dashboard(
     session: SessionDep,
     user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
     ):
-    requests = session.query(Passenger).filter(Passenger.created_by==user.id).options(
+    requests = session.query(Passenger).filter(Passenger.department_id==user.department_id).options(
         joinedload(Passenger.passenger_flights).joinedload(PassengerFlight.flights)
     ).order_by(Passenger.request_date.desc()).all()
     return templates.TemplateResponse(request=request, name="transport_dispatcher/dashboard.html", context={
