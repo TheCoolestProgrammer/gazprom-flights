@@ -19,6 +19,7 @@
                 <th>Цель поездки</th>
                 <th>ID перелета</th>
                 <th>статус пассажира</th>
+                <th>примечания</th>
                 <th>Действие</th>
             </tr>
         </thead>
@@ -38,6 +39,16 @@
                 
                 <td><code>#{{ pf.passengers.application_id }}</code></td>
                 <td>{{ pf.passengers.flight_status.value }}</td>
+                <td>
+                    {% if pf.passengers.notes %}
+                        <div class="notes-preview"
+                            onclick="openNotesModal(`{{ pf.passengers.notes | replace('`', '\\`') | replace('\n', '<br>') }}`)">
+                            {{ pf.passengers.notes[:40] }}{% if pf.passengers.notes|length > 40 %}...{% endif %}
+                        </div>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
                 {% if pf.passengers.flight_status.value != "вылетел" %}
                 <td>
                     <form method="post" action="/dispatcher/cancel_done" style="display: inline;">
@@ -64,7 +75,35 @@
         </tbody>
     </table>
 </div>
+<!-- Модальное окно примечаний -->
+<div id="notesModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Примечание</h3>
+            <span class="close" onclick="closeNotesModal()">&times;</span>
+        </div>
 
+        <div id="notesModalBody" class="notes-full-text"></div>
+    </div>
+</div>
+<script>
+// Открытие модального окна примечаний
+function openNotesModal(text) {
+    document.getElementById('notesModalBody').innerHTML = text;
+    document.getElementById('notesModal').style.display = 'block';
+}
+
+// Закрытие модального окна примечаний
+function closeNotesModal() {
+    document.getElementById('notesModal').style.display = 'none';
+}
+window.addEventListener('click', function(event) {
+    const notesModal = document.getElementById('notesModal');
+    if (event.target === notesModal) {
+        closeNotesModal();
+    }
+});
+</script>
 <style>
     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
     th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
@@ -96,6 +135,59 @@
     }
     .btn-approve:hover {
         background-color: #45a049;
+    }
+    .notes-preview {
+        max-width: 220px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+        color: #007bff;
+    }
+
+    .notes-preview:hover {
+        text-decoration: underline;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background: white;
+        width: 70%;
+        max-width: 800px;
+        margin: 5% auto;
+        border-radius: 8px;
+        padding: 20px;
+        animation: fadeIn 0.2s ease-in-out;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .close {
+        font-size: 28px;
+        cursor: pointer;
+    }
+
+    .notes-full-text {
+        max-height: 70vh;
+        overflow-y: auto;
+        line-height: 1.5;
+        white-space: normal;
+        word-break: break-word;
     }
 </style>
 {% endblock %}
