@@ -139,16 +139,80 @@ async def change_status(
 @router.get("/done", response_class=HTMLResponse)
 async def get_done_flights(request: Request, 
                            session: SessionDep,
-                           user: User = Depends(RoleChecker(Role.DISPATCHER))
+                           user: User = Depends(RoleChecker(Role.DISPATCHER)),
+                           # Параметры фильтрации
+                           departure_date: Optional[str] = Query(None, description="Дата вылета"),
+                           route: Optional[str] = Query(None, description="Маршрут"),
+                           flight_number: Optional[str] = Query(None, description="Номер рейса"),
+                           aircraft_type: Optional[str] = Query(None, description="Тип ВС"),
+                           flight_status: Optional[str] = Query(None, description="Статус пассажира"),
                            ):
     # Загружаем связи сразу, чтобы шаблонизатор мог к ним обращаться
-    flights_data = session.query(PassengerFlight).options(
+    query = session.query(PassengerFlight).options(
+        joinedload(PassengerFlight.flights),
+        joinedload(PassengerFlight.passengers)
+    ).join(Flight, PassengerFlight.flight_id == Flight.id)
+
+    # Применяем фильтры
+    if departure_date:
+        try:
+            departure_date_obj = datetime.datetime.strptime(departure_date, "%Y-%m-%d").date()
+            query = query.filter(PassengerFlight.flights.has(Flight.departure_date == departure_date_obj))
+        except ValueError:
+            pass
+
+    if route:
+        query = query.filter(PassengerFlight.flights.has(Flight.route.ilike(f"%{route}%")))
+
+    if flight_number:
+        try:
+            flight_number_value = int(flight_number)
+            query = query.filter(PassengerFlight.flights.has(Flight.flight_number == flight_number_value))
+        except ValueError:
+            pass
+
+    if aircraft_type:
+        try:
+            aircraft_type_value = int(aircraft_type)
+            query = query.filter(PassengerFlight.flights.has(Flight.aircraft_type == aircraft_type_value))
+        except ValueError:
+            pass
+
+    if flight_status:
+        try:
+            flight_status_value = FlightStatus(flight_status)
+            query = query.filter(PassengerFlight.passengers.has(Passenger.flight_status == flight_status_value))
+        except ValueError:
+            pass
+
+    # Сортировка: сначала не вылетевшие, потом вылетевшие
+    from sqlalchemy import case
+    status_order = case(
+        (PassengerFlight.passengers.has(Passenger.flight_status == FlightStatus.NOT_FLIGHTED), 1),
+        (PassengerFlight.passengers.has(Passenger.flight_status == FlightStatus.FLIGHTED), 2),
+        else_=3
+    )
+    flights_data = query.order_by(status_order, Flight.departure_date.desc()).all()
+    
+    # Получаем уникальные значения для фильтров
+    all_flights = session.query(PassengerFlight).options(
         joinedload(PassengerFlight.flights),
         joinedload(PassengerFlight.passengers)
     ).all()
     
+    aircraft_types = session.query(AircraftType).all()
+    
     return templates.TemplateResponse(request=request, name="dispatcher/done_flights.html", context={
-        "flights": flights_data
+        "flights": flights_data,
+        "aircraft_types": aircraft_types,
+        "flight_statuses": FlightStatus,
+        "filters": {
+            "departure_date": departure_date,
+            "route": route,
+            "flight_number": flight_number,
+            "aircraft_type": aircraft_type,
+            "flight_status": flight_status,
+        }
     })
 
 
