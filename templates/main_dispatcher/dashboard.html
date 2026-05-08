@@ -58,12 +58,22 @@
         </div>
     </form>
 
-    <div class="table-wrapper">
-    <table>
-        <thead>
-            <tr>
-                <th>Дата</th>
-                <th>ФИО</th>
+    <form id="batch-status-form" action="/main_dispatcher/change_status_batch" method="POST">
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px;">
+            <button type="submit" name="action" value="approved" style="background: #13f438; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Согласовать выбранные</button>
+            <button type="submit" name="action" value="rejected" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Отклонить выбранные</button>
+            <button type="button" onclick="selectAll()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Выбрать все</button>
+            <button type="button" onclick="deselectAll()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Снять выделение</button>
+        </div>
+        <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40px;">
+                        <input type="checkbox" id="select-all-checkbox" onchange="toggleAllSelection(this)">
+                    </th>
+                    <th>Дата</th>
+                    <th>ФИО</th>
                 <th>Паспорт</th>
                 <th>Цель</th>
                 <th>отношение к ГТЮ</th>
@@ -80,6 +90,9 @@
         <tbody>
             {% for req in requests %}
             <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                    <input type="checkbox" name="selected_ids" value="{{ req.id }}">
+                </td>
                 <td>{{ req.request_date|format_date_ru }}</td>
                 <td>{{ req.fullname }}</td>
                 <td>{{ req.passport }}</td>
@@ -109,22 +122,18 @@
                         {{ req.main_dispatcher_status.value }}
                     </span>
                 </td>
-                <td>
-                    <a href="/main_dispatcher/edit/{{ req.id }}">📝</a>
-                </td>
-                <td>
+                <td style="display: flex; gap: 8px; align-items: center;">
+                    <a href="/main_dispatcher/edit/{{ req.id }}" style="padding: 8px 12px; background: #6c757d; color: white; border-radius: 4px; text-decoration: none;">📝</a>
                     <button type="button" 
                         class="btn btn-success" 
                         onclick="openPlanningModal('{{ req.id }}', '{{ req.planning_date }}')"
-                        style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                        style="background: #13f438; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">
                         {{Status.CONFIRMED.value}}
                     </button>
-                </td>
-                <td>
                     <button type="button" 
                         class="btn btn-danger" 
                         onclick="change_request_status('{{ req.id }}', '{{Status.REJECTED.value}}')"
-                        style="background: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                        style="background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">
                         {{Status.REJECTED.value}}
                     </button>
                 </td>
@@ -133,6 +142,7 @@
         </tbody>
     </table>
     </div>
+    </form>
 </div>
 
 <!-- Модальное окно для загрузки файла -->
@@ -388,6 +398,33 @@ async function send_status_update(passengerId, data) {
         alert('Системная ошибка сервера');
     }
 }
+
+function toggleAllSelection(source) {
+    const checkboxes = document.querySelectorAll('input[name="selected_ids"]');
+    checkboxes.forEach(cb => cb.checked = source.checked);
+}
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('input[name="selected_ids"]');
+    checkboxes.forEach(cb => cb.checked = true);
+    const master = document.getElementById('select-all-checkbox');
+    if (master) master.checked = true;
+}
+
+function deselectAll() {
+    const checkboxes = document.querySelectorAll('input[name="selected_ids"]');
+    checkboxes.forEach(cb => cb.checked = false);
+    const master = document.getElementById('select-all-checkbox');
+    if (master) master.checked = false;
+}
+
+document.getElementById('batch-status-form').addEventListener('submit', function(e) {
+    const checked = document.querySelectorAll('input[name="selected_ids"]:checked');
+    if (!checked.length) {
+        alert('Пожалуйста, выберите хотя бы одну заявку для изменения статуса');
+        e.preventDefault();
+    }
+});
 
 // Переопределяем старую функцию для кнопки "Отклонить"
 async function change_request_status(passengerId, status) {

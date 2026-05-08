@@ -198,6 +198,23 @@ async def change_status(
     )
 
 
+@router.post("/change_status_batch")
+async def change_status_batch(
+    session: SessionDep,
+    selected_ids: list[int] = Form(...),
+    action: str = Form(...),
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
+):
+    """Массовое изменение статуса заявок главного диспетчера"""
+    new_status = RequestStatus.CONFIRMED if action == "approved" else RequestStatus.REJECTED
+    for passenger_id in selected_ids:
+        passenger = session.get(Passenger, passenger_id)
+        if passenger:
+            passenger.main_dispatcher_status = new_status
+    session.commit()
+    return RedirectResponse(url="/main_dispatcher", status_code=303)
+
+
 @router.post("/upload-docx", response_model=FlightParseResponse)
 async def upload_flights_docx(
     db: SessionDep,
