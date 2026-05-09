@@ -4,18 +4,14 @@
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2>Управление рейсами</h2>
-        <a href="/main_dispatcher/flights">✈️ Рейсы</a>
-        <a href="/main_dispatcher">📋 Заявки пассажиров</a> 
-        <div>
-            <!-- <button type="button" 
-                    onclick="openCreateModal()" 
-                    style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px;">
-                ✈️ Создать новый рейс
-            </button> -->
+        <div class="btn-group">
+            <a href="/main_dispatcher/flights" class="btn btn-primary">✈️ Рейсы</a>
+            <a href="/main_dispatcher" class="btn btn-primary">📄 Заявки пассажиров</a> 
             <button type="button" 
                     id="downloadSelectedBtn" 
                     onclick="downloadSelected()" 
-                    style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; display: none;">
+                    class="btn btn-primary btn-icon"
+                    style="display: none;">
                 📥 Скачать выбранные (0)
             </button>
         </div>
@@ -54,57 +50,54 @@
                     {% endfor %}
                 </select>
             </div>
-            <div style="display: flex; gap: 10px; align-items: flex-end;">
-                <button type="submit" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Применить</button>
-                <a href="?" style="text-decoration: none; padding: 8px 16px; background: #6c757d; color: white; border-radius: 4px;">Сбросить</a>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary btn-icon">Применить</button>
+                <a href="?" class="btn btn-secondary btn-icon">Сбросить</a>
             </div>
         </div>
     </form>
 
     <!-- Кнопки для массового выбора -->
     <div style="margin-bottom: 15px;">
-        <button type="button" onclick="selectAll()" style="background: #6c757d; color: white; padding: 5px 15px; border: none; border-radius: 4px; cursor: pointer;">Выбрать все</button>
+        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()"> <label for="selectAllCheckbox">Выбрать все</label>
+        <button type="button" onclick="selectAll()" style="background: #6c757d; color: white; padding: 5px 15px; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">Выбрать все</button>
         <button type="button" onclick="deselectAll()" style="background: #6c757d; color: white; padding: 5px 15px; border: none; border-radius: 4px; cursor: pointer;">Снять выделение</button>
     </div>
 
-    <!-- Таблица рейсов с чекбоксами -->
-    <table style="width: 100%; border-collapse: collapse;">
-        <thead>
-            <tr style="background: #f2f2f2;">
-                <th style="padding: 10px; border: 1px solid #ddd; width: 30px;">
-                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
-                </th>
-                <th style="padding: 10px; border: 1px solid #ddd;">ID</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Тип ВС</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Борт №</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Дата вылета</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Время</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Кресел</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Маршрут</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for flight in flights %}
-            <tr>
-                <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-                    <input type="checkbox" class="flight-checkbox" data-flight-id="{{ flight.id }}" data-flight-number="{{ flight.flight_number }}" data-aircraft-type="{{ flight.aircraft_type }}" data-gzp="{{ flight.gzp }}" data-departure-date="{{ flight.departure_date }}" data-departure-time="{{ flight.departure_time }}" data-place-number="{{ flight.place_number }}" data-route="{{ flight.route }}">
-                </td>
-                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.id }}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.aircraft_type }}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.flight_number }}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.departure_date|format_date_ru }}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.departure_time }}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.place_number }}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">{{ flight.route }}</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">
-                    <a href="/main_dispatcher/download/{{ flight.id }}" style="color: #007bff; text-decoration: none; margin-right: 10px;">📄 Скачать</a>
-                    <a href="/main_dispatcher/download-excel-tables/{{ flight.id }}" style="color: #28a745; text-decoration: none; margin-right: 10px;">📥 Таблицы</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="requests-list">
+        {% for flight in flights %}
+        <div class="request-card">
+            <div class="checkbox">
+                <input type="checkbox" class="flight-checkbox" data-flight-id="{{ flight.id }}" data-flight-number="{{ flight.flight_number }}" data-aircraft-type="{{ flight.aircraft_type }}" data-gzp="{{ flight.gzp }}" data-departure-date="{{ flight.departure_date }}" data-departure-time="{{ flight.departure_time }}" data-place-number="{{ flight.place_number }}" data-route="{{ flight.route }}">
+            </div>
+            <div class="field">
+                <strong>ID:</strong> {{ flight.id }}
+            </div>
+            <div class="field">
+                <strong>Тип ВС:</strong> {{ flight.aircraft_type_rel.name }}
+            </div>
+            <div class="field">
+                <strong>Борт №:</strong> {{ flight.flight_number }}
+            </div>
+            <div class="field">
+                <strong>Дата вылета:</strong> {{ flight.departure_date|format_date_ru }}
+            </div>
+            <div class="field">
+                <strong>Время:</strong> {{ flight.departure_time }}
+            </div>
+            <div class="field">
+                <strong>Кресел:</strong> {{ flight.place_number }}
+            </div>
+            <div class="field">
+                <strong>Маршрут:</strong> {{ flight.route }}
+            </div>
+            <div class="actions">
+                <a href="/main_dispatcher/download/{{ flight.id }}" class="btn btn-primary btn-icon">📄 Скачать</a>
+                <a href="/main_dispatcher/download-excel-tables/{{ flight.id }}" class="btn btn-success btn-icon">📥 Таблицы</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 
 <!-- Модальное окно для создания рейса -->

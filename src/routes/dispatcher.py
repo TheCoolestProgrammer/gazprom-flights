@@ -201,7 +201,8 @@ async def get_done_flights(request: Request,
     ).all()
     
     aircraft_types = session.query(AircraftType).all()
-    
+    for i in flights_data:
+        print(i.passengers.trip_purpose)
     return templates.TemplateResponse(request=request, name="dispatcher/done_flights.html", context={
         "flights": flights_data,
         "aircraft_types": aircraft_types,

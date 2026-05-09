@@ -4,7 +4,7 @@
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2>Выполненные перелеты и пассажиры</h2>
-        <a href="/dispatcher" class="btn">Назад к заявкам</a>
+        <a href="/dispatcher" class="btn btn-primary">Назад к заявкам</a>
     </div>
 
     <!-- Блок фильтров -->
@@ -40,87 +40,78 @@
                     {% endfor %}
                 </select>
             </div>
-            <div style="display: flex; gap: 10px; align-items: flex-end;">
-                <button type="submit" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Применить</button>
-                <a href="?" style="text-decoration: none; padding: 8px 16px; background: #6c757d; color: white; border-radius: 4px;">Сбросить</a>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary btn-icon">Применить</button>
+                <a href="?" class="btn btn-secondary btn-icon">Сбросить</a>
             </div>
         </div>
     </form>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Дата вылета</th>
-                <th>Тип ВС / № Рейса</th>
-                <th>Маршрут</th>
-                <th>Пассажир (ФИО)</th>
-                <th>Паспорт</th>
-                <th>Вес багажа</th>
-                <th>Цель поездки</th>
-                <th>ID перелета</th>
-                <th>статус пассажира</th>
-                <th>примечания</th>
-                <th>Действие</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for pf in flights %}
-            <tr>
-                <!-- Данные из модели Flight через связь .flights -->
-                <td>{{ pf.flights.departure_date|format_date_ru }}</td>
-                <td>{{ pf.flights.aircraft_type_rel.name }} ({{ pf.flights.flight_number }})</td>
-                <td>{{ pf.flights.route }}</td>
-                
-                <!-- Данные из модели Passenger через связь .passengers -->
-                <td>{{ pf.passengers.fullname }}</td>
-                <td>{{ pf.passengers.passport }}</td>
-                <td>
-                    {% if pf.passengers.cargo_weight %}
-                        {{ pf.passengers.cargo_weight }} кг
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
-
-                <td>{{ pf.passengers.trip_purpose.value }}</td>
-                
-                <td><code>#{{ pf.passengers.application_id }}</code></td>
-                <td>{{ pf.passengers.flight_status.value }}</td>
-                <td>
-                    {% if pf.passengers.notes %}
-                        <div class="notes-preview"
-                            onclick="openNotesModal(`{{ pf.passengers.notes | replace('`', '\\`') | replace('\n', '<br>') }}`)">
-                            {{ pf.passengers.notes[:40] }}{% if pf.passengers.notes|length > 40 %}...{% endif %}
-                        </div>
-                    {% else %}
-                        —
-                    {% endif %}
-                </td>
-                {% if pf.passengers.flight_status.value != "вылетел" %}
-                <td>
-                    <form method="post" action="/dispatcher/cancel_done" style="display: inline;">
-                        <input type="hidden" name="passenger_id" value="{{ pf.passengers.id }}">
-                        <input type="hidden" name="flight_id" value="{{ pf.flight_id }}">
-                        <button type="submit" class="btn-cancel">Отменить</button>
-                    </form>
-                </td>
-                <td>
-                    <form method="post" action="/dispatcher/fly_passenger" style="display: inline;">
-                        <input type="hidden" name="passenger_id" value="{{ pf.passengers.id }}">
-                        <input type="hidden" name="flight_id" value="{{ pf.flight_id }}">
-                        <button type="submit" class="btn-approve">улетел</button>
-                    </form>
-                </td>
+    <div class="requests-list">
+        {% for pf in flights %}
+        <div class="request-card">
+            <div class="field">
+                <strong>Дата вылета:</strong> {{ pf.flights.departure_date|format_date_ru }}
+            </div>
+            <div class="field">
+                <strong>Тип ВС / № Рейса:</strong> {{ pf.flights.aircraft_type_rel.name }} ({{ pf.flights.flight_number }})
+            </div>
+            <div class="field">
+                <strong>Маршрут:</strong> {{ pf.flights.route }}
+            </div>
+            <div class="field">
+                <strong>Пассажир (ФИО):</strong> {{ pf.passengers.fullname }}
+            </div>
+            <div class="field">
+                <strong>Паспорт:</strong> {{ pf.passengers.passport }}
+            </div>
+            <div class="field">
+                <strong>Вес багажа:</strong>
+                {% if pf.passengers.cargo_weight %}
+                    {{ pf.passengers.cargo_weight }} кг
+                {% else %}
+                    —
                 {% endif %}
-                
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="12" style="text-align: center;">Данные о перелетах отсутствуют</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </div>
+            <div class="field">
+                <strong>Цель поездки:</strong> {{ pf.passengers.trip_purpose.value }}
+            </div>
+            <div class="field">
+                <strong>ID перелета:</strong> <code>#{{ pf.passengers.application_id }}</code>
+            </div>
+            <div class="field">
+                <strong>Статус пассажира:</strong> {{ pf.passengers.flight_status.value }}
+            </div>
+            <div class="field">
+                <strong>Примечания:</strong>
+                {% if pf.passengers.notes %}
+                    <div class="notes-preview"
+                        onclick="openNotesModal(`{{ pf.passengers.notes | replace('`', '\\`') | replace('\n', '<br>') }}`)">
+                        {{ pf.passengers.notes[:40] }}{% if pf.passengers.notes|length > 40 %}...{% endif %}
+                    </div>
+                {% else %}
+                    —
+                {% endif %}
+            </div>
+            <div class="actions">
+                {% if pf.passengers.flight_status.value != "вылетел" %}
+                <form method="post" action="/dispatcher/cancel_done" style="display: inline;">
+                    <input type="hidden" name="passenger_id" value="{{ pf.passengers.id }}">
+                    <input type="hidden" name="flight_id" value="{{ pf.flight_id }}">
+                    <button type="submit" class="btn btn-danger btn-icon">Отменить</button>
+                </form>
+                <form method="post" action="/dispatcher/fly_passenger" style="display: inline;">
+                    <input type="hidden" name="passenger_id" value="{{ pf.passengers.id }}">
+                    <input type="hidden" name="flight_id" value="{{ pf.flight_id }}">
+                    <button type="submit" class="btn btn-success btn-icon">улетел</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 20px;">Данные о перелетах отсутствуют</div>
+        {% endfor %}
+    </div>
 </div>
 <!-- Модальное окно примечаний -->
 <div id="notesModal" class="modal">

@@ -4,9 +4,9 @@
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2>Мои заявки на перевозку</h2>
-        <div>
-            <button type="submit" form="status-form" name="action" value="approved" class="btn-submit" style="background: #13f438; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; margin-right: 10px;">Согласовать выбранные</button>
-            <button type="submit" form="status-form" name="action" value="rejected" class="btn-submit" style="background: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Отказать выбранные</button>
+        <div class="btn-group">
+            <button type="submit" form="status-form" name="action" value="approved" class="btn btn-success btn-icon">Согласовать выбранные</button>
+            <button type="submit" form="status-form" name="action" value="rejected" class="btn btn-danger btn-icon">Отказать выбранные</button>
         </div>
     </div>
 
@@ -48,69 +48,63 @@
                 <input type="text" name="passport" value="{{ filters.passport or '' }}" placeholder="Поиск по паспорту" style="width: 100%; padding: 5px;">
             </div>
             
-            <div style="display: flex; gap: 10px; align-items: flex-end;">
-                <button type="submit" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Применить фильтры</button>
-                <a href="?" style="text-decoration: none; padding: 8px 16px; background: #6c757d; color: white; border-radius: 4px;">Сбросить</a>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary btn-icon">Применить фильтры</button>
+                <a href="?" class="btn btn-secondary btn-icon">Сбросить</a>
             </div>
         </div>
     </form>
 
     <!-- Форма для массового изменения статуса -->
     <form id="status-form" action="/department_director/change_status_batch" method="POST">
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="background-color: #f2f2f2;">
-                        <th style="padding: 10px; border: 1px solid #ddd;"><input type="checkbox" id="select-all"></th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Дата</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">ФИО</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Цель</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">отношение к ГТЮ</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">откуда</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">куда</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">планируемая дата</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Статус</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for req in requests %}
-                    <tr>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-                            <input type="checkbox" name="selected_ids" value="{{ req.id }}">
-                        </td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.request_date|format_date_ru }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.fullname }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.trip_purpose.value }}...</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.gtu_relation.value }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_from.name}}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_to.name}}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.planning_date|format_date_ru }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">
-                            <span class="status-{{ req.department_director_status.name.lower() }}">
-                                {{ req.department_director_status.value }}
-                            </span>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="9" style="padding: 20px; text-align: center;">Нет заявок</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div style="margin-bottom: 15px;">
+            <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)"> <label for="select-all">Выбрать все</label>
+        </div>
+        <div class="requests-list">
+            {% for req in requests %}
+            <div class="request-card">
+                <div class="checkbox">
+                    <input type="checkbox" name="selected_ids" value="{{ req.id }}">
+                </div>
+                <div class="field">
+                    <strong>Дата:</strong> {{ req.request_date|format_date_ru }}
+                </div>
+                <div class="field">
+                    <strong>ФИО:</strong> {{ req.fullname }}
+                </div>
+                <div class="field">
+                    <strong>Цель:</strong> {{ req.trip_purpose.value }}
+                </div>
+                <div class="field">
+                    <strong>ГТЮ:</strong> {{ req.gtu_relation.value }}
+                </div>
+                <div class="field">
+                    <strong>Откуда:</strong> {{ req.flight_from.name}}
+                </div>
+                <div class="field">
+                    <strong>Куда:</strong> {{ req.flight_to.name}}
+                </div>
+                <div class="field">
+                    <strong>План. дата:</strong> {{ req.planning_date|format_date_ru }}
+                </div>
+                <div class="field">
+                    <strong>Статус:</strong>
+                    <span class="status-{{ req.department_director_status.name.lower() }}">
+                        {{ req.department_director_status.value }}
+                    </span>
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 20px;">Нет заявок</div>
+            {% endfor %}
         </div>
     </form>
 </div>
 <script>
     // Чекбокс "Выбрать все"
-    const selectAllCheckbox = document.getElementById('select-all');
-    if (selectAllCheckbox) {
-        selectAllCheckbox.onclick = function() {
-            const checkboxes = document.getElementsByName('selected_ids');
-            for (let checkbox of checkboxes) {
-                checkbox.checked = this.checked;
-            }
-        }
+    function toggleSelectAll(source) {
+        const checkboxes = document.querySelectorAll('input[name="selected_ids"]');
+        checkboxes.forEach(cb => cb.checked = source.checked);
     }
 
     // Валидация перед отправкой

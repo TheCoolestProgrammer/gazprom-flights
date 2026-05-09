@@ -137,7 +137,7 @@ async def edit_request(
     birthdate: str = Form(...),
     gender: Gender = Form(...),
     trip_purpose: TripPurpose = Form(...),
-    planning_date: str = Form(...),
+    # planning_date: str = Form(...),
     flight_to: int = Form(...),
     cargo_weight:float = Form(default=None),
     gtu_relation:GTURelation = Form(...),
@@ -156,7 +156,7 @@ async def edit_request(
     passenger.trip_purpose=trip_purpose
     passenger.status=RequestStatus.PENDING
     # passenger.created_by=user.id
-    passenger.planning_date=planning_date
+    # passenger.planning_date=planning_date
     passenger.flight_to_id=flight_to
     passenger.cargo_weight=cargo_weight
     passenger.gtu_relation=gtu_relation
@@ -203,6 +203,7 @@ async def change_status_batch(
     session: SessionDep,
     selected_ids: list[int] = Form(...),
     action: str = Form(...),
+    main_dispatcher_date: Optional[date] = Form(None),
     user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
 ):
     """Массовое изменение статуса заявок главного диспетчера"""
@@ -211,6 +212,8 @@ async def change_status_batch(
         passenger = session.get(Passenger, passenger_id)
         if passenger:
             passenger.main_dispatcher_status = new_status
+            if new_status == RequestStatus.CONFIRMED and main_dispatcher_date:
+                passenger.main_dispatcher_date = main_dispatcher_date
     session.commit()
     return RedirectResponse(url="/main_dispatcher", status_code=303)
 

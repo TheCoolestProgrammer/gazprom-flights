@@ -4,16 +4,15 @@
 <div class="card">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2>Все заявки на перевозку</h2>
-        <div>
-            <a href="/dispatcher/done" style="margin-right: 15px;">выполненные заявки</a>
-            <button type="submit" form="status-form" class="btn-submit">Изменить статус выбранных</button>
+        <div class="btn-group">
+            <a href="/dispatcher/done" class="btn btn-primary">выполненные заявки</a>
+            <button type="submit" form="status-form" class="btn btn-primary">Изменить статус выбранных</button>
             <button type="button" 
                     onclick="openCreateModal()" 
-                    style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 10px;">
+                    class="btn btn-success">
                 ✈️ Создать новый рейс
             </button>
-            <a href="/dispatcher/flights" style="margin-right: 15px;">рейсы</a>
-
+            <a href="/dispatcher/flights" class="btn btn-primary">рейсы</a>
         </div>
     </div>
 
@@ -65,9 +64,9 @@
                 </select>
             </div> -->
             
-            <div style="display: flex; gap: 10px; align-items: flex-end;">
-                <button type="submit" style="background: #007bff; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer;">Применить</button>
-                <a href="?" style="text-decoration: none; padding: 5px 15px; background: #6c757d; color: white; border-radius: 4px;">Сбросить</a>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary btn-icon">Применить</button>
+                <a href="?" class="btn btn-secondary btn-icon">Сбросить</a>
             </div>
         </div>
     </form>
@@ -83,84 +82,68 @@
             </select>
         </div>
 
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="background-color: #f2f2f2;">
-                        <th style="padding: 10px; border: 1px solid #ddd;"><input type="checkbox" id="select-all"></th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">№</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Дата заявки</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Желаемая дата</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">ФИО</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Паспорт</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Вес багажа</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">филиал заявителя</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Откуда</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Куда</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">ГТЮ</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">примечания</th>
+        <div style="margin-bottom: 15px;">
+            <input type="checkbox" id="select-all" onchange="toggleSelectAll()"> <label for="select-all">Выбрать все</label>
+        </div>
 
-                        <th style="padding: 10px; border: 1px solid #ddd;">действие</th>
-
-                        <!-- <th style="padding: 10px; border: 1px solid #ddd;">Статус директора</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">Статус диспетчера</th> -->
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for req in requests %}
-                    <tr>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-                            <input type="checkbox" name="selected_ids" value="{{ req.id }}">
-                        </td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">{{ loop.index }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.request_date|format_date_ru }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.planning_date|format_date_ru }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.fullname }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.passport }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.cargo_weight }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.users.departments.name}}</td>
-
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_from.name if req.flight_from else '-' }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.flight_to.name if req.flight_to else '-' }}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">{{ req.gtu_relation.value if req.gtu_relation else '-' }}</td>
-                        <!-- <td style="padding: 8px; border: 1px solid #ddd;">{{ req.notes if req.notes else '-' }}</td> -->
-                        <td style="padding: 8px; border: 1px solid #ddd;">
-                            {% if req.notes %}
-                                <div class="notes-preview"
-                                    onclick="openNotesModal(`{{ req.notes | replace('`', '\\`') | replace('\n', '<br>') }}`)">
-                                    {{ req.notes[:40] }}{% if req.notes|length > 40 %}...{% endif %}
-                                </div>
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-                            <button type="button" 
-                                class="btn btn-danger" 
-                                onclick="window.location.href='edit/{{ req.id }}'"
-                                style="background: #53cede; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
-                                Редактировать
-                            </button>     
-                        </td>
-
-                        <!-- <td style="padding: 8px; border: 1px solid #ddd;">
-                            <span class="status-{{ req.department_director_status.name.lower() if req.department_director_status else 'unknown' }}">
-                                {{ req.department_director_status.value if req.department_director_status else '-' }}
-                            </span>
-                        </td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">
-                            <span class="status-{{ req.main_dispatcher_status.name.lower() if req.main_dispatcher_status else 'unknown' }}">
-                                {{ req.main_dispatcher_status.value if req.main_dispatcher_status else '-' }}
-                            </span>
-                        </td> -->
-                    </tr>
+        <div class="requests-list">
+            {% for req in requests %}
+            <div class="request-card">
+                <div class="checkbox">
+                    <input type="checkbox" name="selected_ids" value="{{ req.id }}">
+                </div>
+                <div class="field">
+                    <strong>№:</strong> {{ loop.index }}
+                </div>
+                <div class="field">
+                    <strong>Дата заявки:</strong> {{ req.request_date|format_date_ru }}
+                </div>
+                <div class="field">
+                    <strong>Желаемая дата:</strong> {{ req.planning_date|format_date_ru }}
+                </div>
+                <div class="field">
+                    <strong>ФИО:</strong> {{ req.fullname }}
+                </div>
+                <div class="field">
+                    <strong>Паспорт:</strong> {{ req.passport }}
+                </div>
+                <div class="field">
+                    <strong>Вес багажа:</strong> {{ req.cargo_weight }}
+                </div>
+                <div class="field">
+                    <strong>Филиал:</strong> {{ req.users.departments.name }}
+                </div>
+                <div class="field">
+                    <strong>Откуда:</strong> {{ req.flight_from.name if req.flight_from else '-' }}
+                </div>
+                <div class="field">
+                    <strong>Куда:</strong> {{ req.flight_to.name if req.flight_to else '-' }}
+                </div>
+                <div class="field">
+                    <strong>ГТЮ:</strong> {{ req.gtu_relation.value if req.gtu_relation else '-' }}
+                </div>
+                <div class="field">
+                    <strong>Примечания:</strong>
+                    {% if req.notes %}
+                        <div class="notes-preview"
+                            onclick="openNotesModal(`{{ req.notes | replace('`', '\\`') | replace('\n', '<br>') }}`)">
+                            {{ req.notes[:40] }}{% if req.notes|length > 40 %}...{% endif %}
+                        </div>
                     {% else %}
-                    <tr>
-                        <td colspan="12" style="padding: 20px; text-align: center;">Нет заявок, соответствующих фильтрам</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                        —
+                    {% endif %}
+                </div>
+                <div class="actions">
+                    <button type="button" 
+                        class="btn btn-info btn-icon" 
+                        onclick="window.location.href='edit/{{ req.id }}'">
+                        Редактировать
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 20px;">Нет заявок, соответствующих фильтрам</div>
+            {% endfor %}
         </div>
     </form>
 </div>
@@ -253,15 +236,13 @@
 </div>
 <script>
 // Чекбокс "Выбрать все"
-const selectAllCheckbox = document.getElementById('select-all');
-    if (selectAllCheckbox) {
-        selectAllCheckbox.onclick = function() {
-            const checkboxes = document.getElementsByName('selected_ids');
-            for (let checkbox of checkboxes) {
-                checkbox.checked = this.checked;
-            }
-        }
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('select-all');
+    const checkboxes = document.getElementsByName('selected_ids');
+    for (let checkbox of checkboxes) {
+        checkbox.checked = selectAllCheckbox.checked;
     }
+}
 
 // Функции для модального окна
 function openCreateModal() {
