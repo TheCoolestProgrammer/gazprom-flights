@@ -30,12 +30,7 @@
                    style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
         </div>
 
-        <div>
-            <label style="display:block; margin-bottom:5px; font-weight: 500;">Вес (кг)</label>
-            <input type="number" step="0.1" name="weight" required value="{{ cargo.weight }}"
-                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
-        </div>
-
+        
         <div>
             <label style="display:block; margin-bottom:5px; font-weight: 500;">Откуда</label>
             <select name="flight_from" required style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; background: white;">
@@ -52,6 +47,11 @@
                     <option value="{{ airport.id }}" {% if cargo.flight_to_id == airport.id %}selected{% endif %}>{{ airport.name }}</option>
                 {% endfor %}
             </select>
+        </div>
+        <div>
+            <label style="display:block; margin-bottom:5px; font-weight: 500;">Вес (кг)</label>
+            <input type="number" step="0.1" name="weight" required value="{{ cargo.weight }}"
+                   style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px;">
         </div>
 
         <div>
