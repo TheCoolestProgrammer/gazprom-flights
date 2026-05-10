@@ -10,7 +10,7 @@ from os.path import abspath, dirname
 sys.path.append(dirname(dirname(abspath(__file__))))
 
 from src.database import Base  
-from src.models import department, flight_route, passenger, flights, passenger_flight, user
+from src.models import department, passenger, flights, passenger_flight, user, cargo
 from src.config import config as app_config
 
 

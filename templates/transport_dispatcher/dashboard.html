@@ -2,9 +2,12 @@
 
 {% block content %}
 <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
         <h2>мои заявки</h2>
-        <a href="/transport_dispatcher/create" class="btn btn-success">+ Новая заявка</a>
+        <div>
+            <a href="/transport_dispatcher/create" class="btn btn-success">+ Новая заявка</a>
+            <a href="/transport_dispatcher/cargo" class="btn btn-secondary">Перейти к грузам</a>
+        </div>
     </div>
     <div class="requests-list">
         {% for req in requests %}

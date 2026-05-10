@@ -10,6 +10,7 @@ from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GT
 from src.models.department import Department
 from src.models.airport import Airport
 from src.models.passenger_flight import PassengerFlight
+from src.models.cargo import Cargo, PackagingType, CargoLocation
 from src.templates_config import templates
 
 router = APIRouter(prefix="/transport_dispatcher", tags=["transport_dispatcher"])
@@ -59,7 +60,6 @@ async def create_request(
     trip_purpose: TripPurpose = Form(...),
     planning_date: str = Form(...),
     flight_to: int = Form(...),
-    cargo_weight:Optional[float] = Form(default=None),
     gtu_relation:GTURelation = Form(...),
     # department_id:int = Form(...),
     application_id: str = Form(...),
@@ -76,7 +76,6 @@ async def create_request(
         created_by=user.id,
         planning_date=planning_date,
         flight_from_id=flight_from,
-        cargo_weight=cargo_weight,
         gtu_relation=gtu_relation,
         # department_id=department_id,
         department_id=user.department_id,
@@ -85,6 +84,138 @@ async def create_request(
     session.add(new_passenger)
     session.commit()
     return RedirectResponse(url="/transport_dispatcher/", status_code=status.HTTP_303_SEE_OTHER)
+
+@router.get("/cargo", response_class=HTMLResponse)
+async def cargo_dashboard(
+    request: Request,
+    session: SessionDep,
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
+    ):
+    cargo_requests = session.query(Cargo).filter(Cargo.department_id==user.department_id).order_by(Cargo.request_date.desc()).all()
+    return templates.TemplateResponse(request=request, name="transport_dispatcher/cargo_dashboard.html", context={
+        "user": user,
+        "cargo_requests": cargo_requests
+    })
+
+@router.get("/cargo/create", response_class=HTMLResponse)
+async def cargo_create_form(
+    request: Request,
+    session: SessionDep, 
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER)) 
+    ):
+    airports = session.query(Airport).all()
+    return templates.TemplateResponse(request=request, name="transport_dispatcher/cargo_create.html", context={
+        "user": user,
+        "airports": airports,
+        "PackagingType": PackagingType,
+        "CargoLocation": CargoLocation
+    })
+
+@router.post("/cargo/create")
+async def create_cargo(
+    request: Request,
+    session: SessionDep,
+    cargo_name: str = Form(...),
+    packaging_type: PackagingType = Form(...),
+    flight_from: int = Form(...),
+    flight_to: int = Form(...),
+    places_count: int = Form(...),
+    weight: float = Form(...),
+    hazardous: bool = Form(False),
+    location: CargoLocation = Form(...),
+    planning_date: str = Form(...),
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
+):
+    new_cargo = Cargo(
+        name=cargo_name,
+        packaging_type=packaging_type,
+        flight_from_id=flight_from,
+        flight_to_id=flight_to,
+        places_count=places_count,
+        weight=weight,
+        hazardous=hazardous,
+        location=location,
+        planning_date=planning_date,
+        created_by=user.id,
+        department_id=user.department_id
+    )
+    session.add(new_cargo)
+    session.commit()
+    return RedirectResponse(url="/transport_dispatcher/cargo", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.get("/cargo/edit/{cargo_id}", response_class=HTMLResponse)
+async def cargo_edit_form(
+    request: Request,
+    cargo_id: int,
+    session: SessionDep,
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
+):
+    cargo = session.get(Cargo, cargo_id)
+    if not cargo or cargo.department_id != user.department_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Груз не найден")
+
+    airports = session.query(Airport).all()
+    return templates.TemplateResponse(request=request, name="transport_dispatcher/cargo_edit.html", context={
+        "user": user,
+        "cargo": cargo,
+        "airports": airports,
+        "PackagingType": PackagingType,
+        "CargoLocation": CargoLocation
+    })
+
+
+@router.post("/cargo/edit/{cargo_id}")
+async def edit_cargo(
+    request: Request,
+    session: SessionDep,
+    cargo_id: int,
+    cargo_name: str = Form(...),
+    packaging_type: PackagingType = Form(...),
+    flight_from: int = Form(...),
+    flight_to: int = Form(...),
+    places_count: int = Form(...),
+    weight: float = Form(...),
+    hazardous: bool = Form(False),
+    location: CargoLocation = Form(...),
+    planning_date: str = Form(...),
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
+):
+    cargo = session.get(Cargo, cargo_id)
+    if not cargo or cargo.department_id != user.department_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Груз не найден")
+
+    cargo.name = cargo_name
+    cargo.packaging_type = packaging_type
+    cargo.flight_from_id = flight_from
+    cargo.flight_to_id = flight_to
+    cargo.places_count = places_count
+    cargo.weight = weight
+    cargo.hazardous = hazardous
+    cargo.location = location
+    cargo.planning_date = planning_date
+
+    session.commit()
+    return RedirectResponse(url="/transport_dispatcher/cargo", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.delete("/cargo/delete/{cargo_id}")
+async def delete_cargo(
+    cargo_id: int,
+    session: SessionDep,
+    user: User = Depends(RoleChecker(Role.TRANSPORT_DISPATHER))
+):
+    cargo = session.get(Cargo, cargo_id)
+    if not cargo or cargo.department_id != user.department_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Груз не найден")
+
+    try:
+        session.delete(cargo)
+        session.commit()
+        return JSONResponse(content={"message": "Successfully deleted"}, status_code=status.HTTP_200_OK)
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Ошибка базы данных при удалении")
 
 
 @router.get("/edit/{passenger_id}", response_class=HTMLResponse)
@@ -121,7 +252,6 @@ async def edit_request(
     trip_purpose: TripPurpose = Form(...),
     planning_date: str = Form(...),
     flight_to: int = Form(...),
-    cargo_weight:float = Form(None),
     gtu_relation:GTURelation = Form(...),
     # department_id:int = Form(...),
     application_id: str = Form(...),
@@ -141,7 +271,6 @@ async def edit_request(
     passenger.created_by=user.id
     passenger.planning_date=planning_date
     passenger.flight_to_id=flight_to
-    passenger.cargo_weight=cargo_weight
     passenger.gtu_relation=gtu_relation
     passenger.department_id = user.department_id
     passenger.application_id = application_id

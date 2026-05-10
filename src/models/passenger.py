@@ -15,6 +15,7 @@ class Gender(enum.Enum):
 class RequestStatus(enum.Enum):
     PENDING = "рассматривается"
     CONFIRMED = "разрешен"
+    SOVP = "совп"
     REJECTED = "отказ"
 
 class TripPurpose(enum.Enum):

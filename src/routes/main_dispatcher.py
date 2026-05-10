@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, Response, status,UploadFile, File, Query
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import aliased
 from src.models.airport import Airport
 from src.models.pilot import Pilot
@@ -15,6 +16,7 @@ from src.dependencies import get_current_user, RoleChecker
 # from src.models.flight_route import FlightRoute
 from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
+from src.models.cargo import Cargo
 from src.models.department import Department
 from sqlalchemy import case, cast, String
 from src.schemas.flight import FlightCreate, FlightCreateForm, FlightResponse, FlightParseResponse, SelectedFlightsRequest
@@ -102,6 +104,109 @@ async def dashboard(
         "unique_cities_from": sorted(list(unique_cities_from)),
         "unique_cities_to": sorted(list(unique_cities_to)),
     })
+
+
+@router.get("/cargo", response_class=HTMLResponse)
+async def cargo_dashboard(
+    request: Request,
+    session: SessionDep,
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR)),
+    planning_date: Optional[str] = Query(None, description="Желаемая дата"),
+    flight_from: Optional[str] = Query(None, description="Откуда"),
+    flight_to: Optional[str] = Query(None, description="Куда")
+):
+    query = session.query(Cargo)
+    airport_from = aliased(Airport)
+    airport_to = aliased(Airport)
+
+    query = query.filter(Cargo.department_director_status == RequestStatus.CONFIRMED)
+
+    if planning_date:
+        try:
+            planning_date_obj = datetime.strptime(planning_date, "%Y-%m-%d").date()
+            query = query.filter(Cargo.planning_date == planning_date_obj)
+        except ValueError:
+            pass
+
+    if flight_from:
+        query = query.join(airport_from, Cargo.flight_from).filter(airport_from.name == flight_from)
+
+    if flight_to:
+        query = query.join(airport_to, Cargo.flight_to).filter(airport_to.name == flight_to)
+
+    status_order = case(
+        (Cargo.main_dispatcher_status == RequestStatus.PENDING, 1),
+        (Cargo.main_dispatcher_status == RequestStatus.CONFIRMED, 2),
+        (Cargo.main_dispatcher_status == RequestStatus.SOVP, 3),
+        (Cargo.main_dispatcher_status == RequestStatus.REJECTED, 4),
+        else_=5
+    )
+    cargo_requests = query.order_by(status_order, Cargo.request_date.desc()).all()
+
+    all_cargo = session.query(Cargo).all()
+    unique_cities_from = set()
+    unique_cities_to = set()
+
+    for item in all_cargo:
+        if item.flight_from:
+            unique_cities_from.add(item.flight_from.name)
+        if item.flight_to:
+            unique_cities_to.add(item.flight_to.name)
+
+    return templates.TemplateResponse(request=request, name="main_dispatcher/cargo.html", context={
+        "user": user,
+        "cargo_requests": cargo_requests,
+        "Status": RequestStatus,
+        "filters": {
+            "planning_date": planning_date,
+            "flight_from": flight_from,
+            "flight_to": flight_to,
+        },
+        "unique_cities_from": sorted(unique_cities_from),
+        "unique_cities_to": sorted(unique_cities_to),
+    })
+
+
+@router.post("/cargo/change_status_batch")
+async def change_cargo_status_batch(
+    session: SessionDep,
+    selected_ids: list[int] = Form(...),
+    action: str = Form(...),
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
+):
+    new_status = RequestStatus.CONFIRMED if action == "approved" else RequestStatus.REJECTED
+    for cargo_id in selected_ids:
+        cargo = session.get(Cargo, cargo_id)
+        if cargo:
+            cargo.main_dispatcher_status = new_status
+    session.commit()
+    return RedirectResponse(url="/main_dispatcher/cargo", status_code=303)
+
+
+@router.patch("/cargo/change_status/{cargo_id}")
+async def change_cargo_status(
+    cargo_id: int,
+    session: SessionDep,
+    main_dispatcher_date: Optional[date] = Body(None),
+    request_status: str = Body(..., embed=True),
+    
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
+):
+    cargo = session.get(Cargo, cargo_id)
+    if not cargo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Груз с ID {cargo_id} не найден"
+        )
+    try:
+        new_status = RequestStatus(request_status)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid request status: {request_status}")
+    cargo.main_dispatcher_status = new_status
+    if main_dispatcher_date:
+        cargo.main_dispatcher_date = main_dispatcher_date
+    session.commit()
+    return JSONResponse(content={"message": "Status updated"})
 
 
 @router.get("/edit/{passenger_id}", response_class=HTMLResponse)

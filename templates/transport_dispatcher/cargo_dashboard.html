@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Мои грузы</h2>
+        <div class="btn-group">
+            <a href="/transport_dispatcher/" class="btn btn-primary">Пассажиры</a>
+            <a href="/transport_dispatcher/cargo/create" class="btn btn-success">Новый груз</a>
+        </div>
+    </div>
+
+    <div class="requests-list">
+        {% for cargo in cargo_requests %}
+        <div class="request-card">
+            <div class="field">
+                <strong>Название груза:</strong> {{ cargo.name }}
+            </div>
+            <div class="field">
+                <strong>Упаковка:</strong> {{ cargo.packaging_type.value }}
+            </div>
+            <div class="field">
+                <strong>Откуда:</strong> {{ cargo.flight_from.name }}
+            </div>
+            <div class="field">
+                <strong>Куда:</strong> {{ cargo.flight_to.name }}
+            </div>
+            <div class="field">
+                <strong>Мест:</strong> {{ cargo.places_count }}
+            </div>
+            <div class="field">
+                <strong>Вес (кг):</strong> {{ cargo.weight }}
+            </div>
+            <div class="field">
+                <strong>Опасный груз:</strong> {{ 'Да' if cargo.hazardous else 'Нет' }}
+            </div>
+            <div class="field">
+                <strong>Размещение:</strong> {{ cargo.location.value }}
+            </div>
+            <div class="field">
+                <strong>Статус директора:</strong>
+                <span class="status-{{ cargo.department_director_status.name.lower() }}">
+                    {{ cargo.department_director_status.value }}
+                </span>
+            </div>
+            <div class="field">
+                <strong>Статус старшего диспетчера:</strong>
+                <span class="status-{{ cargo.main_dispatcher_status.name.lower() }}">
+                    {{ cargo.main_dispatcher_status.value }}
+                </span>
+            </div>
+            <div class="field">
+                <strong>План. дата:</strong> {{ cargo.planning_date|format_date_ru }}
+            </div>
+            <div class="field">
+                <strong>Дата согласования СОВП:</strong> {{ cargo.main_dispatcher_date|format_date_ru }}
+            </div>
+            <div class="actions" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+                <button type="button" class="btn btn-info btn-icon" onclick="window.location.href='cargo/edit/{{ cargo.id }}'">
+                    Редактировать
+                </button>
+                <button type="button" class="btn btn-danger btn-icon" onclick="deleteCargo('{{ cargo.id }}')">
+                    Удалить
+                </button>
+            </div>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 20px;">Нет грузовых заявок</div>
+        {% endfor %}
+    </div>
+</div>
+<script>
+async function deleteCargo(cargoId) {
+    if (!confirm('Удалить этот груз?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/transport_dispatcher/cargo/delete/${cargoId}`, {
+            method: 'DELETE',
+        });
+
+        if (response.ok) {
+            alert('Груз успешно удалён');
+            window.location.reload();
+        } else {
+            const errorData = await response.json();
+            alert('Ошибка при удалении: ' + (errorData.detail || 'Неизвестная ошибка'));
+        }
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла системная ошибка при попытке удаления');
+    }
+}
+</script>
+{% endblock %}

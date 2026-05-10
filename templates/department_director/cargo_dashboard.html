@@ -2,23 +2,21 @@
 
 {% block content %}
 <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 12px; flex-wrap: wrap;">
-        <h2>Мои заявки на перевозку</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap:12px; flex-wrap:wrap;">
+        <h2>Грузовые заявки</h2>
         <div class="btn-group">
-            <a href="/department_director/cargo" class="btn btn-secondary btn-icon">Грузы</a>
+            <a href="/department_director/" class="btn btn-primary btn-icon">Пассажиры</a>
             <button type="submit" form="status-form" name="action" value="approved" class="btn btn-success btn-icon">Согласовать выбранные</button>
             <button type="submit" form="status-form" name="action" value="rejected" class="btn btn-danger btn-icon">Отказать выбранные</button>
         </div>
     </div>
 
-    <!-- Блок фильтров -->
     <form method="GET" action="" style="margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 8px;">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
             <div>
                 <label style="font-weight: bold;">Желаемая дата:</label><br>
                 <input type="date" name="planning_date" value="{{ filters.planning_date or '' }}" style="width: 100%; padding: 5px;">
             </div>
-            
             <div>
                 <label style="font-weight: bold;">Откуда:</label><br>
                 <select name="flight_from" style="width: 100%; padding: 5px;">
@@ -28,7 +26,6 @@
                     {% endfor %}
                 </select>
             </div>
-            
             <div>
                 <label style="font-weight: bold;">Куда:</label><br>
                 <select name="flight_to" style="width: 100%; padding: 5px;">
@@ -38,77 +35,58 @@
                     {% endfor %}
                 </select>
             </div>
-            
-            <div>
-                <label style="font-weight: bold;">ФИО:</label><br>
-                <input type="text" name="fullname" value="{{ filters.fullname or '' }}" placeholder="Поиск по ФИО" style="width: 100%; padding: 5px;">
-            </div>
-            
-            <div>
-                <label style="font-weight: bold;">Паспорт:</label><br>
-                <input type="text" name="passport" value="{{ filters.passport or '' }}" placeholder="Поиск по паспорту" style="width: 100%; padding: 5px;">
-            </div>
-            
-            <div class="btn-group">
-                <button type="submit" class="btn btn-primary btn-icon">Применить фильтры</button>
+            <div class="btn-group" style="align-self:end; justify-content:flex-end;">
+                <button type="submit" class="btn btn-primary btn-icon">Применить</button>
                 <a href="?" class="btn btn-secondary btn-icon">Сбросить</a>
             </div>
         </div>
     </form>
 
-    <!-- Форма для массового изменения статуса -->
-    <form id="status-form" action="/department_director/change_status_batch" method="POST">
+    <form id="status-form" action="/department_director/cargo/change_status_batch" method="POST">
         <div style="margin-bottom: 15px;">
             <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)"> <label for="select-all">Выбрать все</label>
         </div>
         <div class="requests-list">
-            {% for req in requests %}
+            {% for cargo in cargo_requests %}
             <div class="request-card">
                 <div class="checkbox">
-                    <input type="checkbox" name="selected_ids" value="{{ req.id }}">
+                    <input type="checkbox" name="selected_ids" value="{{ cargo.id }}">
                 </div>
                 <div class="field">
-                    <strong>Дата:</strong> {{ req.request_date|format_date_ru }}
+                    <strong>Название:</strong> {{ cargo.name }}
                 </div>
                 <div class="field">
-                    <strong>ФИО:</strong> {{ req.fullname }}
+                    <strong>Откуда:</strong> {{ cargo.flight_from.name }}
                 </div>
                 <div class="field">
-                    <strong>Цель:</strong> {{ req.trip_purpose.value }}
+                    <strong>Куда:</strong> {{ cargo.flight_to.name }}
                 </div>
                 <div class="field">
-                    <strong>ГТЮ:</strong> {{ req.gtu_relation.value }}
+                    <strong>Вес:</strong> {{ cargo.weight }} кг
                 </div>
                 <div class="field">
-                    <strong>Откуда:</strong> {{ req.flight_from.name}}
+                    <strong>Мест:</strong> {{ cargo.places_count }}
                 </div>
                 <div class="field">
-                    <strong>Куда:</strong> {{ req.flight_to.name}}
+                    <strong>План. дата:</strong> {{ cargo.planning_date|format_date_ru }}
                 </div>
                 <div class="field">
-                    <strong>План. дата:</strong> {{ req.planning_date|format_date_ru }}
-                </div>
-                <div class="field">
-                    <strong>Статус:</strong>
-                    <span class="status-{{ req.department_director_status.name.lower() }}">
-                        {{ req.department_director_status.value }}
-                    </span>
+                    <strong>Статус:</strong> <span class="status-{{ cargo.department_director_status.name.lower() }}">{{ cargo.department_director_status.value }}</span>
                 </div>
             </div>
             {% else %}
-            <div style="text-align: center; padding: 20px;">Нет заявок</div>
+            <div style="text-align: center; padding: 20px;">Нет грузовых заявок</div>
             {% endfor %}
         </div>
     </form>
 </div>
+
 <script>
-    // Чекбокс "Выбрать все"
     function toggleSelectAll(source) {
         const checkboxes = document.querySelectorAll('input[name="selected_ids"]');
         checkboxes.forEach(cb => cb.checked = source.checked);
     }
 
-    // Валидация перед отправкой
     const statusForm = document.getElementById('status-form');
     if (statusForm) {
         statusForm.onsubmit = function(e) {
@@ -123,31 +101,4 @@
         }
     }
 </script>
-
-<style>
-    .status-approved, .status-confirmed {
-        color: green;
-        font-weight: bold;
-    }
-    .status-rejected {
-        color: red;
-        font-weight: bold;
-    }
-    .status-pending {
-        color: orange;
-        font-weight: bold;
-    }
-    .btn-submit {
-        background: #007bff;
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-    .btn-submit:hover {
-        background: #0056b3;
-    }
-</style>
-
 {% endblock %}
