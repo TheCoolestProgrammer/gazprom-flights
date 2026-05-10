@@ -10,11 +10,38 @@ from openpyxl.utils import get_column_letter
 from sqlalchemy.orm import Session
 from src.models.flights import Flight
 from src.models.passenger_flight import PassengerFlight
+from src.models.cargo import Cargo
 
 
 def get_template_path(filename: str) -> str:
     """Get the full path to a template file in the docs folder."""
     return os.path.join(str(Path(__file__).parent.parent.parent), "docs", filename)
+
+
+# def safe_set_cell_value(ws, cell_ref, value):
+#     """
+#     Safely set cell value, handling merged cells.
+#     If cell is part of a merged range, writes to the top-left cell of the range.
+#     """
+#     try:
+#         ws[cell_ref].value = value
+#     except AttributeError:
+#         # Cell is a MergedCell, find the merged range and write to top-left cell
+#         from openpyxl.utils import get_column_letter, column_index_from_string
+        
+#         # Parse cell reference
+#         col_idx = column_index_from_string(cell_ref.rstrip('0123456789'))
+#         row_idx = int(cell_ref[len(cell_ref.rstrip('0123456789')):])
+        
+#         # Find which merged range this cell belongs to
+#         for merged_range in ws.merged_cells.ranges:
+#             if cell_ref in merged_range:
+#                 # Found the merged range, write to top-left cell
+#                 top_left = merged_range.start_cell.coordinate
+#                 ws[top_left].value = value
+#                 return
+#         # If not in any merged range, just write anyway
+#         ws[cell_ref].value = value
 
 
 def generate_passenger_manifest_excel(flight: Flight, session: Session) -> bytes:
@@ -83,11 +110,27 @@ def generate_passenger_manifest_excel(flight: Flight, session: Session) -> bytes
                 ws[f"L{row}"] = parts[0]  # From point
             if len(parts) > 1:
                 ws[f"M{row}"] = parts[1]  # To point
-    
+
+    ws = wb["Груз"]
+    cargo_items = session.query(Cargo).filter(Cargo.flight_id == flight.id).all()
+    for idx, cargo in enumerate(cargo_items, 1):
+        row = 7 + idx
+        ws[f"A{row}"] = idx
+        ws[f"H{row}"] = cargo.name
+        ws[f"DN{row}"] = cargo.packaging_type.value
+        ws[f"GP{row}"] = cargo.places_count
+        ws[f"HF{row}"] = cargo.weight
+        ws[f"FL{row}"] = cargo.flight_from.name
+        ws[f"GA{row}"] = cargo.flight_to.name
+        # ws[f"G{row}"] = cargo.weight
+        # ws[f"H{row}"] = cargo.places_count
+        # ws[f"L{row}"] = cargo.flight_from.name if cargo.flight_from else ""
+        # ws[f"M{row}"] = cargo.flight_to.name if cargo.flight_to else ""
     # Save to bytes
     output = BytesIO()
     wb.save(output)
     output.seek(0)
+
     return output.getvalue()
 
 
