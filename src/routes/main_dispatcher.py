@@ -16,7 +16,7 @@ from src.dependencies import get_current_user, RoleChecker
 # from src.models.flight_route import FlightRoute
 from src.models.user import User, Role
 from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
-from src.models.cargo import Cargo
+from src.models.cargo import Cargo, CargoLocation, PackagingType
 from src.models.department import Department
 from sqlalchemy import case, cast, String
 from src.schemas.flight import FlightCreate, FlightCreateForm, FlightResponse, FlightParseResponse, SelectedFlightsRequest
@@ -165,6 +165,39 @@ async def cargo_dashboard(
         "unique_cities_from": sorted(unique_cities_from),
         "unique_cities_to": sorted(unique_cities_to),
     })
+
+@router.post("/cargo-edit/{cargo_id}")
+async def edit_cargo(
+    request: Request,
+    session: SessionDep,
+    cargo_id: int,
+    cargo_name: str = Form(...),
+    packaging_type: PackagingType = Form(...),
+    flight_from: int = Form(...),
+    flight_to: int = Form(...),
+    places_count: int = Form(...),
+    weight: float = Form(...),
+    hazardous: bool = Form(False),
+    location: CargoLocation = Form(...),
+    planning_date: str = Form(...),
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
+):
+    cargo = session.get(Cargo, cargo_id)
+    if not cargo or cargo.department_id != user.department_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Груз не найден")
+
+    cargo.name = cargo_name
+    cargo.packaging_type = packaging_type
+    cargo.flight_from_id = flight_from
+    cargo.flight_to_id = flight_to
+    cargo.places_count = places_count
+    cargo.weight = weight
+    cargo.hazardous = hazardous
+    cargo.location = location
+    cargo.planning_date = planning_date
+
+    session.commit()
+    return RedirectResponse(url="/main_dispatcher/cargo", status_code=status.HTTP_303_SEE_OTHER)
 
 
 @router.post("/cargo/change_status_batch")

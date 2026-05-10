@@ -99,6 +99,8 @@
                     <strong>Дата согласования СОВП:</strong> {{ cargo.main_dispatcher_date|format_date_ru }}
                 </div>
                 <div class="actions">
+                    <a href="/dispatcher/edit-cargo/{{ cargo.id }}" class="btn btn-secondary btn-icon">📝</a>
+
                     <button type="button" class="btn btn-success btn-icon" onclick="changeCargoStatus('{{ cargo.id }}', 'approved')">Согласовать</button>
                     <button type="button" class="btn btn-danger btn-icon" onclick="changeCargoStatus('{{ cargo.id }}', 'rejected')">Отклонить</button>
                 </div>

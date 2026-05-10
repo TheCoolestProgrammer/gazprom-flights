@@ -6,7 +6,7 @@ from fastapi import Body
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import aliased, joinedload
-from src.models.cargo import Cargo
+from src.models.cargo import Cargo, CargoLocation, PackagingType
 from src.models.aircraft_types import AircraftType
 from src.models.pilot import Pilot
 from src.models.airport import Airport
@@ -24,6 +24,25 @@ router = APIRouter(prefix="/dispatcher", tags=["dispatcher"])
 
 
 
+@router.get("/edit-cargo/{cargo_id}", response_class=HTMLResponse)
+async def cargo_edit_form(
+    request: Request,
+    cargo_id: int,
+    session: SessionDep,
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
+):
+    cargo = session.get(Cargo, cargo_id)
+    if not cargo or cargo.department_id != user.department_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Груз не найден")
+
+    airports = session.query(Airport).all()
+    return templates.TemplateResponse(request=request, name="main_dispatcher/cargo_edit.html", context={
+        "user": user,
+        "cargo": cargo,
+        "airports": airports,
+        "PackagingType": PackagingType,
+        "CargoLocation": CargoLocation
+    })
 @router.get("/done-cargo", response_class=HTMLResponse)
 async def done_cargo_dashboard(
     request: Request,
