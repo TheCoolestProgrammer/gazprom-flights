@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Грузовые заявки</h2>
+        <div class="btn-group">
+            <a href="/dispatcher" class="btn btn-primary btn-icon">📄 Заявки пассажиров</a>
+            <a href="/dispatcher/flights" class="btn btn-primary btn-icon">✈️ Рейсы</a>
+        </div>
+    </div>
+
+    <!-- Блок фильтров -->
+    <form method="GET" action="" style="margin: 20px 0; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div>
+                <label style="font-weight: bold;">Желаемая дата:</label><br>
+                <input type="date" name="planning_date" value="{{ filters.planning_date or '' }}" style="width: 100%; padding: 5px;">
+            </div>
+            
+            <div>
+                <label style="font-weight: bold;">Откуда:</label><br>
+                <select name="flight_from" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for city in unique_cities_from %}
+                        <option value="{{ city }}" {% if filters.flight_from == city %}selected{% endif %}>{{ city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label style="font-weight: bold;">Куда:</label><br>
+                <select name="flight_to" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for city in unique_cities_to %}
+                        <option value="{{ city }}" {% if filters.flight_to == city %}selected{% endif %}>{{ city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- <div>
+                <label style="font-weight: bold;">Статус директора:</label><br>
+                <select name="director_status" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for status_name, status_value in unique_director_statuses %}
+                        <option value="{{ status_name }}" {% if filters.director_status == status_name %}selected{% endif %}>{{ status_value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label style="font-weight: bold;">Статус СОВП:</label><br>
+                <select name="dispatcher_status" style="width: 100%; padding: 5px;">
+                    <option value="">Все</option>
+                    {% for status_name, status_value in unique_dispatcher_statuses %}
+                        <option value="{{ status_name }}" {% if filters.dispatcher_status == status_name %}selected{% endif %}>{{ status_value }}</option>
+                    {% endfor %}
+                </select>
+            </div> -->
+            
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary btn-icon">Применить</button>
+                <a href="?" class="btn btn-secondary btn-icon">Сбросить</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Форма изменения статуса и назначения рейса -->
+    
+    <form id="batch-status-form" action="/dispatcher/cargo/change_done_status_batch" method="POST">
+        <input type="hidden" name="action" id="cargoBatchAction" value="">
+        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 15px; flex-wrap: wrap;">
+            <div>
+                <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAllCargo(this)"> <label for="select-all-checkbox">Выбрать все</label>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <label style="font-weight: bold; margin:0;">Назначить рейс:</label>
+                <select name="flight_id" id="cargoFlightSelect" style="margin-left: 10px; padding: 5px;">
+                    <option value="">Не выбирать</option>
+                    {% for flight in flights %}
+                        <option value="{{ flight.id }}">{{ flight.aircraft_type }}-{{ flight.flight_number }}-{{ flight.route }}</option>
+                    {% endfor %}
+                </select>
+                <button type="button" onclick="submitCargoFlight()" class="btn btn-primary btn-icon">Применить рейс</button>
+            </div>
+            <div class="btn-group">
+                <button type="button" onclick="submitCargoBatch('done')" class="btn btn-success btn-icon">Отметить выполненными</button>
+                <button type="button" onclick="submitCargoBatch('pending')" class="btn btn-secondary btn-icon">Снять отметку</button>
+                <button type="button" onclick="deselectAllCargo()" class="btn btn-secondary btn-icon">Снять выделение</button>
+            </div>
+        </div>
+
+        <div class="requests-list">
+            {% for cargo in cargo_requests %}
+            <div class="request-card">
+                <div class="checkbox">
+                    <input type="checkbox" name="selected_ids" value="{{ cargo.id }}">
+                </div>
+                <div class="field">
+                    <strong>Название груза:</strong> {{ cargo.name }}
+                </div>
+                <div class="field">
+                    <strong>Упаковка:</strong> {{ cargo.packaging_type.value }}
+                </div>
+                <div class="field">
+                    <strong>Откуда:</strong> {{ cargo.flight_from.name }}
+                </div>
+                <div class="field">
+                    <strong>Куда:</strong> {{ cargo.flight_to.name }}
+                </div>
+                <div class="field">
+                    <strong>Вес:</strong> {{ cargo.weight }} кг
+                </div>
+                <div class="field">
+                    <strong>Мест:</strong> {{ cargo.places_count }}
+                </div>
+                <div class="field">
+                    <strong>Опасный груз:</strong> {{ 'Да' if cargo.hazardous else 'Нет' }}
+                </div>
+                <div class="field">
+                    <strong>Размещение:</strong> {{ cargo.location.value }}
+                </div>
+                <div class="field">
+                    <strong>Статус:</strong>
+                    <span class="status-{{ cargo.main_dispatcher_status.name.lower() }}">{{ cargo.main_dispatcher_status.value }}</span>
+                </div>
+                <div class="field">
+                    <strong>Статус исполнения:</strong>
+                    <span class="status-{{ cargo.done_status.name.lower() }}">{{ cargo.done_status.value }}</span>
+                </div>
+                <div class="field">
+                    <strong>Назначенный рейс:</strong>
+                    {% if cargo.flight %}
+                        {{ cargo.flight.aircraft_type_rel.name if cargo.flight.aircraft_type_rel else '' }} / {{ cargo.flight.flight_number }} — {{ cargo.flight.route }}
+                    {% else %}
+                        Не назначен
+                    {% endif %}
+                </div>
+                <div class="field">
+                    <strong>План. дата:</strong> {{ cargo.planning_date|format_date_ru }}
+                </div>
+                <div class="field">
+                    <strong>Дата заявки:</strong> {{ cargo.request_date|format_date_ru }}
+                </div>
+                
+                <div class="field">
+                    <strong>Дата согласования СОВП:</strong> {{ cargo.main_dispatcher_date|format_date_ru }}
+                </div>
+                <div class="actions">
+                        <button type="button" class="btn btn-success btn-icon" onclick="markCargoDone({{ cargo.id }})">Выполнено</button>
+                </div>
+            </div>
+        {% else %}
+        <div style="text-align: center; padding: 20px;">Нет грузовых заявок</div>
+        {% endfor %}
+    </div>
+    </form>
+</div>
+
+<script>
+// Чекбокс "Выбрать все"
+function toggleSelectAllCargo(source) {
+    var checkboxes = document.querySelectorAll('input[name="selected_ids"]');
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = source.checked;
+    }
+}
+
+function deselectAllCargo() {
+    var checkboxes = document.querySelectorAll('input[name="selected_ids"]');
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = false;
+    }
+    var master = document.getElementById('select-all-checkbox');
+    if (master) master.checked = false;
+}
+
+function submitCargoBatch(action) {
+    var form = document.getElementById('batch-status-form');
+    var checkboxes = form.querySelectorAll('input[name="selected_ids"]');
+    var selected = Array.prototype.slice.call(checkboxes).some(function(cb) { return cb.checked; });
+    if (!selected) {
+        alert('Пожалуйста, выберите хотя бы одну заявку');
+        return;
+    }
+    document.getElementById('cargoBatchAction').value = action;
+    form.action = '/dispatcher/cargo/change_done_status_batch';
+    form.submit();
+}
+
+function submitCargoFlight() {
+    var form = document.getElementById('batch-status-form');
+    var checkboxes = form.querySelectorAll('input[name="selected_ids"]');
+    var selected = Array.prototype.slice.call(checkboxes).some(function(cb) { return cb.checked; });
+    if (!selected) {
+        alert('Пожалуйста, выберите хотя бы один груз');
+        return;
+    }
+    form.action = '/dispatcher/cargo/assign_flight';
+    document.getElementById('cargoBatchAction').value = '';
+    form.submit();
+}
+
+function markCargoDone(cargoId) {
+    fetch('/dispatcher/cargo/done_status/' + cargoId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request_status: 'разрешен' })
+    }).then(function(response) {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            return response.json().then(function(errorData) {
+                alert('Ошибка при установке done_status: ' + (errorData.detail || errorData.message || 'Неизвестная ошибка'));
+            });
+        }
+    }).catch(function(error) {
+        alert('Ошибка при установке done_status: ' + error);
+    });
+}
+
+// Функции для модального окна создания рейса
+function openCreateModal() {
+    document.getElementById('createModal').style.display = 'block';
+    document.getElementById('createFlightForm').reset();
+    document.getElementById('createResult').style.display = 'none';
+}
+
+function closeCreateModal() {
+    document.getElementById('createModal').style.display = 'none';
+}
+
+// Закрытие по клику вне окна
+window.onclick = function(event) {
+    var modal = document.getElementById('createModal');
+    if (event.target === modal) {
+        closeCreateModal();
+    }
+    var notesModal = document.getElementById('notesModal');
+
+    if (event.target === notesModal) {
+        closeNotesModal();
+    }
+}
+
+// Открытие модального окна примечаний
+function openNotesModal(text) {
+    document.getElementById('notesModalBody').innerHTML = text;
+    document.getElementById('notesModal').style.display = 'block';
+}
+
+// Закрытие модального окна примечаний
+function closeNotesModal() {
+    document.getElementById('notesModal').style.display = 'none';
+}
+
+// Обработка отправки формы
+var createFlightForm = document.getElementById('createFlightForm');
+if (createFlightForm) {
+    createFlightForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        var pilotIdValue = document.getElementById('pilot_id').value;
+        var formData = {
+            departure_date: document.getElementById('departure_date').value,
+            aircraft_type: document.getElementById('aircraft_type').value,
+            flight_number: parseInt(document.getElementById('flight_number').value),
+            gzp: document.getElementById('gzp').value,
+            departure_time: document.getElementById('departure_time').value,
+            place_number: parseInt(document.getElementById('place_number').value),
+            route: document.getElementById('route').value,
+            pilot_id: pilotIdValue ? parseInt(pilotIdValue) : null,
+            notes: document.getElementById('notes').value
+        };
+        
+        var submitBtn = this.querySelector('button[type="submit"]');
+        var resultDiv = document.getElementById('createResult');
+        
+        submitBtn.disabled = true;
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = '<div style="background: #cce5ff; padding: 10px; border-radius: 4px;">⏳ Создание рейса и генерация DOCX...</div>';
+        
+        try {
+            var response = await fetch('/main_dispatcher/create-from-form', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            
+            if (response.ok) {
+                var data = await response.json();
+                resultDiv.innerHTML = `
+                    <div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 4px;">
+                        ✅ Рейс успешно создан!<br>
+                        <a href="/main_dispatcher/download/${data.flight_id}" style="color: #155724; font-weight: bold;">📄 Скачать DOCX-заявку</a>
+                    </div>
+                `;
+                setTimeout(function() {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                var error = await response.json();
+                throw new Error(error.detail || 'Ошибка при создании');
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            resultDiv.innerHTML = `
+                <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px;">
+                    ❌ Ошибка: ${error.message}
+                </div>
+            `;
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
+}
+
+</script>
+
+<style>
+    .status-approved, .status-confirmed {
+        color: green;
+        font-weight: bold;
+    }
+    .status-pending, .status-waiting {
+        color: orange;
+        font-weight: bold;
+    }
+    .status-rejected, .status-cancelled {
+        color: red;
+        font-weight: bold;
+    }
+    .btn-submit {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-submit:hover {
+        background-color: #218838;
+    }
+    button[type="submit"]:hover {
+        opacity: 0.9;
+    }
+    .notes-preview {
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    color: #007bff;
+    }
+
+    .notes-preview:hover {
+        text-decoration: underline;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background: white;
+        width: 70%;
+        max-width: 800px;
+        margin: 5% auto;
+        border-radius: 8px;
+        padding: 20px;
+        animation: fadeIn 0.2s ease-in-out;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .close {
+        font-size: 28px;
+        cursor: pointer;
+    }
+
+    .notes-full-text {
+        max-height: 70vh;
+        overflow-y: auto;
+        line-height: 1.5;
+        white-space: normal;
+        word-break: break-word;
+    }
+</style>
+{% endblock %}

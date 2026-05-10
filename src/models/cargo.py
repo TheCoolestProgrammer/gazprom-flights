@@ -33,15 +33,18 @@ class Cargo(Base):
     hazardous = Column(Boolean, nullable=False, default=False)
     department_director_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
     main_dispatcher_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
+    done_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
     location = Column(Enum(CargoLocation), nullable=False)
     planning_date = Column(Date, nullable=False)
     main_dispatcher_date = Column(Date, nullable=True)
     request_date = Column(Date, default=datetime.datetime.now)
     created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    flight_id = Column(Integer, ForeignKey("flights.id"), nullable=True)
 
     flight_from = relationship("Airport", foreign_keys=[flight_from_id])
     flight_to = relationship("Airport", foreign_keys=[flight_to_id])
     departments = relationship("Department", foreign_keys=[department_id])
+    flight = relationship("Flight", back_populates="cargo_items")
 
     def __str__(self):
         return self.name

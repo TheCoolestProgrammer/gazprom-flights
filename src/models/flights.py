@@ -28,6 +28,7 @@ class Flight(Base):
     # flight_date = Column(Date, nullable=False)
 
     passenger_flights = relationship("PassengerFlight", back_populates="flights")
+    cargo_items = relationship("Cargo", back_populates="flight")
     pilot = relationship("Pilot", back_populates="flights")
     aircraft_type_rel = relationship("AircraftType", back_populates="flights")
     
