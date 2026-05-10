@@ -4,7 +4,7 @@ import enum
 import datetime
 from src.database import Base
 from src.models.passenger import RequestStatus
-
+from src.models.passenger import FlightStatus
 
 class PackagingType(enum.Enum):
     BOX = "ящик"
@@ -34,6 +34,8 @@ class Cargo(Base):
     department_director_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
     main_dispatcher_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
     done_status = Column(Enum(RequestStatus), nullable=False, default=RequestStatus.PENDING)
+    flight_status = Column(Enum(FlightStatus), nullable=False, default=FlightStatus.NOT_FLIGHTED)
+
     location = Column(Enum(CargoLocation), nullable=False)
     planning_date = Column(Date, nullable=False)
     main_dispatcher_date = Column(Date, nullable=True)

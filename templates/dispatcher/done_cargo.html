@@ -111,6 +111,10 @@
                     <span class="status-{{ cargo.main_dispatcher_status.name.lower() }}">{{ cargo.main_dispatcher_status.value }}</span>
                 </div>
                 <div class="field">
+                    <strong>Статус вылета:</strong>
+                    <span class="status-{{ cargo.flight_status.name.lower() }}">{{ cargo.flight_status.value }}</span>
+                </div>
+                <div class="field">
                     <strong>План. дата:</strong> {{ cargo.planning_date|format_date_ru }}
                 </div>
                 <div class="field">

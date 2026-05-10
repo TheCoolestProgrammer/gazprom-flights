@@ -78,7 +78,6 @@ async def done_cargo_dashboard(
     status_order = case(
         (Cargo.main_dispatcher_status == RequestStatus.PENDING, 1),
         (Cargo.main_dispatcher_status == RequestStatus.CONFIRMED, 2),
-        (Cargo.main_dispatcher_status == RequestStatus.SOVP, 3),
         (Cargo.main_dispatcher_status == RequestStatus.REJECTED, 4),
         else_=5
     )
@@ -136,8 +135,7 @@ async def fly_cargo(
     cargo = session.get(Cargo, cargo_id)
     if not cargo:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Груз не найден")
-    cargo.main_dispatcher_status = RequestStatus.SOVP
-    cargo.done_status = RequestStatus.SOVP
+    cargo.flight_status = FlightStatus.FLIGHTED
     session.commit()
     return RedirectResponse(url="/dispatcher/done-cargo", status_code=303)
 
