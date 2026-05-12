@@ -2,7 +2,19 @@ from datetime import datetime
 import os
 from typing import Optional
 
-from fastapi import APIRouter, Body, HTTPException, Request, Depends, Form, Response, status,UploadFile, File, Query
+from fastapi import (
+    APIRouter,
+    Body,
+    HTTPException,
+    Request,
+    Depends,
+    Form,
+    Response,
+    status,
+    UploadFile,
+    File,
+    Query,
+)
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import aliased
@@ -13,13 +25,26 @@ from src.crud.flight import create_flights_bulk
 from src.crud.excel_generator import generate_both_excel_files
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
+
 # from src.models.flight_route import FlightRoute
 from src.models.user import User, Role
-from src.models.passenger import Passenger, RequestStatus,Gender,TripPurpose, GTURelation
+from src.models.passenger import (
+    Passenger,
+    RequestStatus,
+    Gender,
+    TripPurpose,
+    GTURelation,
+)
 from src.models.cargo import Cargo, CargoLocation, PackagingType
 from src.models.department import Department
 from sqlalchemy import case, cast, String
-from src.schemas.flight import FlightCreate, FlightCreateForm, FlightResponse, FlightParseResponse, SelectedFlightsRequest
+from src.schemas.flight import (
+    FlightCreate,
+    FlightCreateForm,
+    FlightResponse,
+    FlightParseResponse,
+    SelectedFlightsRequest,
+)
 from src.parsers.docs_parser import parse_flight_docx
 from docx import Document
 from io import BytesIO
@@ -44,7 +69,9 @@ async def dashboard(
     passport: Optional[str] = Query(None, description="Паспорт"),
 ):
     # Базовый запрос заявок
-    query = session.query(Passenger).filter(Passenger.department_director_status == RequestStatus.CONFIRMED)
+    query = session.query(Passenger).filter(
+        Passenger.department_director_status == RequestStatus.CONFIRMED
+    )
     airport_from = aliased(Airport)
     airport_to = aliased(Airport)
 
@@ -55,12 +82,16 @@ async def dashboard(
             query = query.filter(Passenger.planning_date == planning_date_obj)
         except ValueError:
             pass  # Игнорируем неверный формат даты
-    
+
     if flight_from:
-        query = query.join(airport_from, Passenger.flight_from).filter(airport_from.name == flight_from)
+        query = query.join(airport_from, Passenger.flight_from).filter(
+            airport_from.name == flight_from
+        )
 
     if flight_to:
-        query = query.join(airport_to, Passenger.flight_to).filter(airport_to.name == flight_to)
+        query = query.join(airport_to, Passenger.flight_to).filter(
+            airport_to.name == flight_to
+        )
 
     if fullname:
         query = query.filter(Passenger.fullname.ilike(f"%{fullname}%"))
@@ -74,36 +105,44 @@ async def dashboard(
         (Passenger.main_dispatcher_status == RequestStatus.PENDING, 1),
         (Passenger.main_dispatcher_status == RequestStatus.CONFIRMED, 2),
         (Passenger.main_dispatcher_status == RequestStatus.REJECTED, 3),
-        else_=4
+        else_=4,
     )
     requests = query.order_by(status_order, Passenger.request_date.desc()).all()
-    
+
     # Получаем уникальные значения для фильтров
-    all_requests = session.query(Passenger).filter(Passenger.department_director_status == RequestStatus.CONFIRMED).all()
-    
+    all_requests = (
+        session.query(Passenger)
+        .filter(Passenger.department_director_status == RequestStatus.CONFIRMED)
+        .all()
+    )
+
     unique_cities_from = set()
     unique_cities_to = set()
-    
+
     for req in all_requests:
         if req.flight_from:
             unique_cities_from.add(req.flight_from.name)
         if req.flight_to:
             unique_cities_to.add(req.flight_to.name)
-    
-    return templates.TemplateResponse(request=request, name="main_dispatcher/dashboard.html", context={
-        "user": user,
-        "requests": requests,
-        "Status": RequestStatus,
-        "filters": {
-            "planning_date": planning_date,
-            "flight_from": flight_from,
-            "flight_to": flight_to,
-            "fullname": fullname,
-            "passport": passport,
+
+    return templates.TemplateResponse(
+        request=request,
+        name="main_dispatcher/dashboard.html",
+        context={
+            "user": user,
+            "requests": requests,
+            "Status": RequestStatus,
+            "filters": {
+                "planning_date": planning_date,
+                "flight_from": flight_from,
+                "flight_to": flight_to,
+                "fullname": fullname,
+                "passport": passport,
+            },
+            "unique_cities_from": sorted(list(unique_cities_from)),
+            "unique_cities_to": sorted(list(unique_cities_to)),
         },
-        "unique_cities_from": sorted(list(unique_cities_from)),
-        "unique_cities_to": sorted(list(unique_cities_to)),
-    })
+    )
 
 
 @router.get("/cargo", response_class=HTMLResponse)
@@ -113,7 +152,7 @@ async def cargo_dashboard(
     user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR)),
     planning_date: Optional[str] = Query(None, description="Желаемая дата"),
     flight_from: Optional[str] = Query(None, description="Откуда"),
-    flight_to: Optional[str] = Query(None, description="Куда")
+    flight_to: Optional[str] = Query(None, description="Куда"),
 ):
     query = session.query(Cargo)
     airport_from = aliased(Airport)
@@ -129,17 +168,21 @@ async def cargo_dashboard(
             pass
 
     if flight_from:
-        query = query.join(airport_from, Cargo.flight_from).filter(airport_from.name == flight_from)
+        query = query.join(airport_from, Cargo.flight_from).filter(
+            airport_from.name == flight_from
+        )
 
     if flight_to:
-        query = query.join(airport_to, Cargo.flight_to).filter(airport_to.name == flight_to)
+        query = query.join(airport_to, Cargo.flight_to).filter(
+            airport_to.name == flight_to
+        )
 
     status_order = case(
         (Cargo.main_dispatcher_status == RequestStatus.PENDING, 1),
         (Cargo.main_dispatcher_status == RequestStatus.CONFIRMED, 2),
-        (Cargo.main_dispatcher_status == RequestStatus.SOVP, 3),
+        # (Cargo.main_dispatcher_status == RequestStatus.SOVP, 3),
         (Cargo.main_dispatcher_status == RequestStatus.REJECTED, 4),
-        else_=5
+        else_=5,
     )
     cargo_requests = query.order_by(status_order, Cargo.request_date.desc()).all()
 
@@ -153,18 +196,23 @@ async def cargo_dashboard(
         if item.flight_to:
             unique_cities_to.add(item.flight_to.name)
 
-    return templates.TemplateResponse(request=request, name="main_dispatcher/cargo.html", context={
-        "user": user,
-        "cargo_requests": cargo_requests,
-        "Status": RequestStatus,
-        "filters": {
-            "planning_date": planning_date,
-            "flight_from": flight_from,
-            "flight_to": flight_to,
+    return templates.TemplateResponse(
+        request=request,
+        name="main_dispatcher/cargo.html",
+        context={
+            "user": user,
+            "cargo_requests": cargo_requests,
+            "Status": RequestStatus,
+            "filters": {
+                "planning_date": planning_date,
+                "flight_from": flight_from,
+                "flight_to": flight_to,
+            },
+            "unique_cities_from": sorted(unique_cities_from),
+            "unique_cities_to": sorted(unique_cities_to),
         },
-        "unique_cities_from": sorted(unique_cities_from),
-        "unique_cities_to": sorted(unique_cities_to),
-    })
+    )
+
 
 @router.post("/cargo-edit/{cargo_id}")
 async def edit_cargo(
@@ -180,11 +228,13 @@ async def edit_cargo(
     hazardous: bool = Form(False),
     location: CargoLocation = Form(...),
     planning_date: str = Form(...),
-    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR)),
 ):
     cargo = session.get(Cargo, cargo_id)
     if not cargo or cargo.department_id != user.department_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Груз не найден")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Груз не найден"
+        )
 
     cargo.name = cargo_name
     cargo.packaging_type = packaging_type
@@ -197,7 +247,9 @@ async def edit_cargo(
     cargo.planning_date = planning_date
 
     session.commit()
-    return RedirectResponse(url="/main_dispatcher/cargo", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(
+        url="/main_dispatcher/cargo", status_code=status.HTTP_303_SEE_OTHER
+    )
 
 
 @router.post("/cargo/change_status_batch")
@@ -205,9 +257,11 @@ async def change_cargo_status_batch(
     session: SessionDep,
     selected_ids: list[int] = Form(...),
     action: str = Form(...),
-    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR)),
 ):
-    new_status = RequestStatus.CONFIRMED if action == "approved" else RequestStatus.REJECTED
+    new_status = (
+        RequestStatus.CONFIRMED if action == "approved" else RequestStatus.REJECTED
+    )
     for cargo_id in selected_ids:
         cargo = session.get(Cargo, cargo_id)
         if cargo:
@@ -222,19 +276,20 @@ async def change_cargo_status(
     session: SessionDep,
     main_dispatcher_date: Optional[date] = Body(None),
     request_status: str = Body(..., embed=True),
-    
-    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR)),
 ):
     cargo = session.get(Cargo, cargo_id)
     if not cargo:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Груз с ID {cargo_id} не найден"
+            detail=f"Груз с ID {cargo_id} не найден",
         )
     try:
         new_status = RequestStatus(request_status)
     except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid request status: {request_status}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid request status: {request_status}"
+        )
     cargo.main_dispatcher_status = new_status
     if main_dispatcher_date:
         cargo.main_dispatcher_date = main_dispatcher_date
@@ -245,30 +300,35 @@ async def change_cargo_status(
 @router.get("/edit/{passenger_id}", response_class=HTMLResponse)
 async def edit_form(
     request: Request,
-    passenger_id:int,
-    session: SessionDep, 
-    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
-    ):
-    passenger = session.query(Passenger).filter(Passenger.id==passenger_id).first()
+    passenger_id: int,
+    session: SessionDep,
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR)),
+):
+    passenger = session.query(Passenger).filter(Passenger.id == passenger_id).first()
     departments = session.query(Department).all()
     # flight_routes = session.query(FlightRoute).all()
     airports = session.query(Airport).all()
     print(airports)
-    return templates.TemplateResponse(request=request, name="main_dispatcher/edit.html", context={
-        "user": user,
-        "departments": departments,
-        "passenger":passenger,
-        "airports":airports,
-        # "flight_routes":flight_routes
-        "TripPurpose":TripPurpose,
-        "GTURelation":GTURelation
-    })
+    return templates.TemplateResponse(
+        request=request,
+        name="main_dispatcher/edit.html",
+        context={
+            "user": user,
+            "departments": departments,
+            "passenger": passenger,
+            "airports": airports,
+            # "flight_routes":flight_routes
+            "TripPurpose": TripPurpose,
+            "GTURelation": GTURelation,
+        },
+    )
+
 
 @router.post("/edit/{passenger_id}")
 async def edit_request(
     request: Request,
     session: SessionDep,
-    passenger_id:int,
+    passenger_id: int,
     fullname: str = Form(...),
     passport: int = Form(...),
     flight_from: int = Form(...),
@@ -277,50 +337,51 @@ async def edit_request(
     trip_purpose: TripPurpose = Form(...),
     # planning_date: str = Form(...),
     flight_to: int = Form(...),
-    cargo_weight:float = Form(default=None),
-    gtu_relation:GTURelation = Form(...),
+    cargo_weight: float = Form(default=None),
+    gtu_relation: GTURelation = Form(...),
     # department_id:int = Form(...),
     main_dispatcher_date: str = Form(default=None),
-    notes:Optional[str] = Form(default=None),
-    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
+    notes: Optional[str] = Form(default=None),
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR)),
 ):
     passenger = session.get(Passenger, passenger_id)
-    
-    passenger.fullname=fullname
-    passenger.passport=passport
-    passenger.flight_from_id=flight_from
-    passenger.birthdate=birthdate # Нужна конвертация в date объект
-    passenger.gender=gender
-    passenger.trip_purpose=trip_purpose
-    passenger.status=RequestStatus.PENDING
+
+    passenger.fullname = fullname
+    passenger.passport = passport
+    passenger.flight_from_id = flight_from
+    passenger.birthdate = birthdate  # Нужна конвертация в date объект
+    passenger.gender = gender
+    passenger.trip_purpose = trip_purpose
+    passenger.status = RequestStatus.PENDING
     # passenger.created_by=user.id
     # passenger.planning_date=planning_date
-    passenger.flight_to_id=flight_to
-    passenger.cargo_weight=cargo_weight
-    passenger.gtu_relation=gtu_relation
+    passenger.flight_to_id = flight_to
+    passenger.cargo_weight = cargo_weight
+    passenger.gtu_relation = gtu_relation
     # passenger.department_id = department_id
- 
+
     passenger.main_dispatcher_date = main_dispatcher_date
-    passenger.notes=notes
+    passenger.notes = notes
 
     session.commit()
     return RedirectResponse(url="/main_dispatcher/", status_code=303)
+
 
 @router.patch("/change_status/{passenger_id}", response_class=HTMLResponse)
 async def change_status(
     request: Request,
     session: SessionDep,
-    passenger_id:int,
+    passenger_id: int,
     main_dispatcher_date: date = Body(None),
-    request_status:RequestStatus = Body(..., embed=True),
-    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
-    ):
-    passenger = session.get(Passenger,passenger_id)
-    
+    request_status: RequestStatus = Body(..., embed=True),
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR)),
+):
+    passenger = session.get(Passenger, passenger_id)
+
     if not passenger:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail=f"Пассажир с ID {passenger_id} не найден"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Пассажир с ID {passenger_id} не найден",
         )
     # try:
     passenger.main_dispatcher_status = request_status
@@ -329,10 +390,9 @@ async def change_status(
         passenger.main_dispatcher_date = main_dispatcher_date
 
     session.commit()
-    
+
     return JSONResponse(
-        content={"message": "Successfully changed"}, 
-        status_code=status.HTTP_200_OK
+        content={"message": "Successfully changed"}, status_code=status.HTTP_200_OK
     )
 
 
@@ -342,10 +402,12 @@ async def change_status_batch(
     selected_ids: list[int] = Form(...),
     action: str = Form(...),
     main_dispatcher_date: Optional[date] = Form(None),
-    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR))
+    user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR)),
 ):
     """Массовое изменение статуса заявок главного диспетчера"""
-    new_status = RequestStatus.CONFIRMED if action == "approved" else RequestStatus.REJECTED
+    new_status = (
+        RequestStatus.CONFIRMED if action == "approved" else RequestStatus.REJECTED
+    )
     for passenger_id in selected_ids:
         passenger = session.get(Passenger, passenger_id)
         if passenger:
@@ -359,38 +421,37 @@ async def change_status_batch(
 @router.post("/upload-docx", response_model=FlightParseResponse)
 async def upload_flights_docx(
     db: SessionDep,
-    file: UploadFile = File(..., description="DOCX файл с заявкой на полёты")
+    file: UploadFile = File(..., description="DOCX файл с заявкой на полёты"),
 ):
     """
     Загружает DOCX файл с заявкой на выполнение полетов,
     парсит его и сохраняет данные в базу данных.
     """
     # Проверка типа файла
-    if not file.filename.endswith('.docx'):
+    if not file.filename.endswith(".docx"):
         raise HTTPException(
             status_code=400,
-            detail="Неверный формат файла. Ожидается файл с расширением .docx"
+            detail="Неверный формат файла. Ожидается файл с расширением .docx",
         )
-    
+
     try:
         # Чтение содержимого файла
         file_content = await file.read()
-        
+
         # Парсинг документа
         parsed_data = parse_flight_docx(file_content)
-        
+
         if not parsed_data["departure_date"]:
             raise HTTPException(
                 status_code=400,
-                detail="Не удалось найти дату выполнения полётов в документе"
+                detail="Не удалось найти дату выполнения полётов в документе",
             )
-        
+
         if not parsed_data["flights"]:
             raise HTTPException(
-                status_code=400,
-                detail="Не удалось найти рейсы в документе"
+                status_code=400, detail="Не удалось найти рейсы в документе"
             )
-        
+
         # Подготовка данных для сохранения
         flights_to_create = []
         for flight_data in parsed_data["flights"]:
@@ -400,13 +461,13 @@ async def upload_flights_docx(
                 departure_date=parsed_data["departure_date"],
                 departure_time=flight_data["departure_time"],
                 place_number=flight_data["place_number"],
-                route=flight_data["route"]
+                route=flight_data["route"],
             )
             flights_to_create.append(flight_create)
-        
+
         # Сохранение в БД
         saved_flights = create_flights_bulk(db, flights_to_create)
-        
+
         # Преобразование в response schema
         flights_response = [
             FlightResponse(
@@ -416,26 +477,27 @@ async def upload_flights_docx(
                 departure_date=flight.departure_date,
                 departure_time=flight.departure_time,
                 place_number=flight.place_number,
-                route=flight.route
+                route=flight.route,
             )
             for flight in saved_flights
         ]
-        
+
         return FlightParseResponse(
             status="success",
             message=f"Успешно обработано {len(saved_flights)} рейсов",
             flights_parsed=len(saved_flights),
-            flights_saved=flights_response
+            flights_saved=flights_response,
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
         # logger.error(f"Ошибка при обработке файла: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Внутренняя ошибка сервера при обработке файла: {str(e)}"
+            detail=f"Внутренняя ошибка сервера при обработке файла: {str(e)}",
         )
+
 
 @router.get("/flights", response_class=HTMLResponse)
 async def flights_page(
@@ -451,7 +513,9 @@ async def flights_page(
     if departure_date:
         try:
             departure_date_obj = datetime.strptime(departure_date, "%Y-%m-%d").date()
-            flight_query = flight_query.filter(Flight.departure_date == departure_date_obj)
+            flight_query = flight_query.filter(
+                Flight.departure_date == departure_date_obj
+            )
         except ValueError:
             pass
 
@@ -461,45 +525,56 @@ async def flights_page(
     if flight_number:
         try:
             flight_number_value = int(flight_number)
-            flight_query = flight_query.filter(Flight.flight_number == flight_number_value)
+            flight_query = flight_query.filter(
+                Flight.flight_number == flight_number_value
+            )
         except ValueError:
             pass
 
     if aircraft_type:
         try:
             aircraft_type_value = int(aircraft_type)
-            flight_query = flight_query.filter(Flight.aircraft_type == aircraft_type_value)
+            flight_query = flight_query.filter(
+                Flight.aircraft_type == aircraft_type_value
+            )
         except ValueError:
             pass
 
     if flight_status:
         try:
             flight_status_value = FlightPlaneStatus(flight_status)
-            flight_query = flight_query.filter(Flight.flight_status == flight_status_value)
+            flight_query = flight_query.filter(
+                Flight.flight_status == flight_status_value
+            )
         except ValueError:
             pass
 
     flights = flight_query.order_by(Flight.departure_date.desc()).all()
     pilots = db.query(Pilot).all()
     aircraft_types = db.query(AircraftType).all()
-    return templates.TemplateResponse(request=request, name="main_dispatcher/flights.html", context={
-        "flights": flights,
-        "pilots": pilots,
-        "filters": {
-            "departure_date": departure_date,
-            "route": route,
-            "flight_number": flight_number,
-            "aircraft_type": aircraft_type,
-            "flight_status": flight_status,
+    return templates.TemplateResponse(
+        request=request,
+        name="main_dispatcher/flights.html",
+        context={
+            "flights": flights,
+            "pilots": pilots,
+            "filters": {
+                "departure_date": departure_date,
+                "route": route,
+                "flight_number": flight_number,
+                "aircraft_type": aircraft_type,
+                "flight_status": flight_status,
+            },
+            "aircraft_types": aircraft_types,
+            "flight_statuses": FlightPlaneStatus,
         },
-        "aircraft_types": aircraft_types,
-        "flight_statuses": FlightPlaneStatus,
-    })
+    )
+
 
 @router.post("/create-from-form", response_model=dict)
 async def create_flight_from_form(
     flight_data: FlightCreateForm,  # Используем Pydantic модель
-    db: SessionDep
+    db: SessionDep,
 ):
     """
     Создаёт рейс из формы, сохраняет в БД и генерирует DOCX-файл.
@@ -507,19 +582,23 @@ async def create_flight_from_form(
     try:
         # Логируем полученные данные для отладки
         print(f"Получены данные: {flight_data}")
-        
+
         # Проверяем, нет ли уже рейса с таким же номером на эту дату
-        existing_flight = db.query(Flight).filter(
-            Flight.flight_number == flight_data.flight_number,
-            Flight.departure_date == flight_data.departure_date
-        ).first()
-        
+        existing_flight = (
+            db.query(Flight)
+            .filter(
+                Flight.flight_number == flight_data.flight_number,
+                Flight.departure_date == flight_data.departure_date,
+            )
+            .first()
+        )
+
         if existing_flight:
             raise HTTPException(
-                status_code=400, 
-                detail=f"Рейс с номером {flight_data.flight_number} на дату {flight_data.departure_date} уже существует"
+                status_code=400,
+                detail=f"Рейс с номером {flight_data.flight_number} на дату {flight_data.departure_date} уже существует",
             )
-        
+
         # Сохраняем в БД
         new_flight = Flight(
             aircraft_type=flight_data.aircraft_type,
@@ -529,31 +608,34 @@ async def create_flight_from_form(
             place_number=flight_data.place_number,
             route=flight_data.route,
             pilot_id=flight_data.pilot_id,
-            notes=flight_data.notes
+            notes=flight_data.notes,
             # flight_status = FlightStatus.PLANNED.value
         )
         db.add(new_flight)
         db.commit()
         db.refresh(new_flight)
-        
+
         # Генерируем DOCX
         docx_bytes = generate_flight_docx(new_flight, flight_data.gzp)
-        
+
         # Сохраняем файл
         os.makedirs("generated_docx", exist_ok=True)
         filename = f"flight_{new_flight.id}_{new_flight.departure_date}.docx"
         filepath = os.path.join("generated_docx", filename)
         with open(filepath, "wb") as f:
             f.write(docx_bytes)
-        
+
         return {"status": "success", "flight_id": new_flight.id, "file": filename}
-    
+
     except HTTPException:
         raise
     except Exception as e:
         db.rollback()
         print(f"Ошибка: {str(e)}")  # Логируем ошибку
-        raise HTTPException(status_code=500, detail=f"Ошибка при создании рейса: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Ошибка при создании рейса: {str(e)}"
+        )
+
 
 @router.get("/download/{flight_id}")
 async def download_flight_docx(flight_id: int, db: SessionDep):
@@ -563,55 +645,70 @@ async def download_flight_docx(flight_id: int, db: SessionDep):
     flight = db.query(Flight).filter(Flight.id == flight_id).first()
     if not flight:
         raise HTTPException(status_code=404, detail="Рейс не найден")
-    
+
     # Генерируем заново или берём сохранённый
     docx_bytes = generate_flight_docx(flight, "")
-    
+
     # Отдаём файл
     return Response(
         content=docx_bytes,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f"attachment; filename=flight_{flight_id}.docx"}
+        headers={
+            "Content-Disposition": f"attachment; filename=flight_{flight_id}.docx"
+        },
     )
+
 
 @router.get("/list", response_model=list[FlightResponse])
 async def list_flights(db: SessionDep):
     """Список всех рейсов (для отображения в таблице)"""
-    flights = db.query(Flight).order_by(Flight.departure_date.desc(), Flight.departure_time).all()
+    flights = (
+        db.query(Flight)
+        .order_by(Flight.departure_date.desc(), Flight.departure_time)
+        .all()
+    )
     return flights
+
 
 def generate_flight_docx(flight: Flight, gzp: str) -> bytes:
     """
     Генерирует DOCX-документ в формате заявки на выполнение полётов.
     """
     doc = Document()
-    
+
     # Заголовок
     title = doc.add_paragraph("Заявка на выполнение полетов")
     title.runs[0].bold = True
-    
+
     doc.add_paragraph()  # Пустая строка
-    
+
     # Дата (преобразуем в русский формат с днём недели)
     weekday_ru = {
-        0: "понедельник", 1: "вторник", 2: "среда", 3: "четверг",
-        4: "пятница", 5: "суббота", 6: "воскресенье"
+        0: "понедельник",
+        1: "вторник",
+        2: "среда",
+        3: "четверг",
+        4: "пятница",
+        5: "суббота",
+        6: "воскресенье",
     }
     weekday_name = weekday_ru[flight.departure_date.weekday()]
     date_str = f"{flight.departure_date.day:02d}.{flight.departure_date.month:02d}.{flight.departure_date.year} {weekday_name}"
     doc.add_paragraph(date_str)
-    
+
     doc.add_paragraph()  # Пустая строка
-    
+
     # Рейс (номер рейса используем как есть)
-    flight_line = (f"1. {flight.aircraft_type} {flight.flight_number} ГЗП {gzp} "
-                   f"время вылета {flight.departure_time.strftime('%H:%M')} "
-                   f"кол-во кресел {flight.place_number}")
+    flight_line = (
+        f"1. {flight.aircraft_type} {flight.flight_number} ГЗП {gzp} "
+        f"время вылета {flight.departure_time.strftime('%H:%M')} "
+        f"кол-во кресел {flight.place_number}"
+    )
     doc.add_paragraph(flight_line)
-    
+
     # Маршрут
     doc.add_paragraph(f"Маршрут: {flight.route}")
-    
+
     # Сохраняем в байты
     buffer = BytesIO()
     doc.save(buffer)
@@ -620,37 +717,40 @@ def generate_flight_docx(flight: Flight, gzp: str) -> bytes:
 
 
 @router.post("/download-selected")
-async def download_selected_flights(
-    request: SelectedFlightsRequest,
-    db: SessionDep
-):
+async def download_selected_flights(request: SelectedFlightsRequest, db: SessionDep):
     """
     Скачивает выбранные рейсы в одном DOCX-файле.
     """
     if not request.flight_ids:
         raise HTTPException(status_code=400, detail="Не выбрано ни одного рейса")
-    
+
     # Получаем рейсы из БД
-    flights = db.query(Flight).filter(Flight.id.in_(request.flight_ids)).order_by(Flight.departure_date, Flight.departure_time).all()
-    
+    flights = (
+        db.query(Flight)
+        .filter(Flight.id.in_(request.flight_ids))
+        .order_by(Flight.departure_date, Flight.departure_time)
+        .all()
+    )
+
     if not flights:
         raise HTTPException(status_code=404, detail="Рейсы не найдены")
-    
+
     # Генерируем DOCX со всеми рейсами
     docx_bytes = generate_multiple_flights_docx(flights)
-    
+
     # Генерируем имя файла с датами
     dates = set(f.departure_date for f in flights)
     if len(dates) == 1:
         filename = f"flights_{list(dates)[0]}.docx"
     else:
         filename = f"flights_{min(dates)}_{max(dates)}.docx"
-    
+
     return Response(
         content=docx_bytes,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
+
 
 @router.get("/download-excel-tables/{flight_id}")
 async def download_excel_tables(flight_id: int, db: SessionDep):
@@ -662,28 +762,35 @@ async def download_excel_tables(flight_id: int, db: SessionDep):
     flight = db.query(Flight).filter(Flight.id == flight_id).first()
     if not flight:
         raise HTTPException(status_code=404, detail="Рейс не найден")
-    
+
     # Генерируем оба Excel файла
     manifest_bytes, ticket_list_bytes = generate_both_excel_files(flight, db)
-    
+
     # Создаём ZIP архив с двумя файлами
     zip_buffer = BytesIO()
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         # Добавляем манифест
-        manifest_filename = f"Манифест_рейс_{flight.flight_number}_{flight.departure_date}.xlsx"
+        manifest_filename = (
+            f"Манифест_рейс_{flight.flight_number}_{flight.departure_date}.xlsx"
+        )
         zip_file.writestr(manifest_filename, manifest_bytes)
-        
+
         # Добавляем список для оформления билетов
-        ticket_filename = f"Билеты_рейс_{flight.flight_number}_{flight.departure_date}.xlsx"
+        ticket_filename = (
+            f"Билеты_рейс_{flight.flight_number}_{flight.departure_date}.xlsx"
+        )
         zip_file.writestr(ticket_filename, ticket_list_bytes)
-    
+
     zip_buffer.seek(0)
-    
+
     return Response(
         content=zip_buffer.getvalue(),
         media_type="application/zip",
-        headers={"Content-Disposition": f"attachment; filename=flight_{flight.flight_number}_{flight.departure_date}.zip"}
+        headers={
+            "Content-Disposition": f"attachment; filename=flight_{flight.flight_number}_{flight.departure_date}.zip"
+        },
     )
+
 
 def generate_multiple_flights_docx(flights: list[Flight]) -> bytes:
     """
@@ -691,63 +798,70 @@ def generate_multiple_flights_docx(flights: list[Flight]) -> bytes:
     """
     from docx.shared import Pt
     from docx.enum.text import WD_ALIGN_PARAGRAPH
-    
+
     doc = Document()
-    
+
     # Заголовок
     title = doc.add_paragraph("Заявка на выполнение полетов")
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title.runs[0].bold = True
     title.runs[0].font.size = Pt(16)
-    
+
     doc.add_paragraph()  # Пустая строка
-    
+
     # Группируем рейсы по датам
     from collections import defaultdict
+
     flights_by_date = defaultdict(list)
     for flight in flights:
         flights_by_date[flight.departure_date].append(flight)
-    
+
     # Для каждой даты создаём раздел
     for i, (date, date_flights) in enumerate(sorted(flights_by_date.items())):
         if i > 0:
             doc.add_page_break()
-        
+
         # Преобразуем дату в русский формат с днём недели
         weekday_ru = {
-            0: "понедельник", 1: "вторник", 2: "среда", 3: "четверг",
-            4: "пятница", 5: "суббота", 6: "воскресенье"
+            0: "понедельник",
+            1: "вторник",
+            2: "среда",
+            3: "четверг",
+            4: "пятница",
+            5: "суббота",
+            6: "воскресенье",
         }
         weekday_name = weekday_ru[date.weekday()]
         date_str = f"{date.day:02d}.{date.month:02d}.{date.year} {weekday_name}"
-        
+
         date_paragraph = doc.add_paragraph(date_str)
         date_paragraph.runs[0].bold = True
         date_paragraph.runs[0].font.size = Pt(14)
-        
+
         doc.add_paragraph()  # Пустая строка
-        
+
         # Добавляем каждый рейс
         for idx, flight in enumerate(date_flights, 1):
             # Получаем ГЗП (если нет в модели, можно добавить или передавать отдельно)
             # Для этого нужно добавить поле gzp в модель Flight
             # gzp = getattr(flight, 'gzp', '_____')
-            
-            flight_line = (f"{idx}. {flight.aircraft_type} {flight.flight_number} ГЗП "
-                          f"время вылета {flight.departure_time.strftime('%H:%M')} "
-                          f"кол-во кресел {flight.place_number}")
+
+            flight_line = (
+                f"{idx}. {flight.aircraft_type} {flight.flight_number} ГЗП "
+                f"время вылета {flight.departure_time.strftime('%H:%M')} "
+                f"кол-во кресел {flight.place_number}"
+            )
             doc.add_paragraph(flight_line)
-            
+
             # Маршрут
             doc.add_paragraph(f"Маршрут: {flight.route}")
-            
+
             # Добавляем пустую строку между рейсами, если не последний
             if idx < len(date_flights):
                 doc.add_paragraph()
-    
+
     # Сохраняем в байты
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
     return buffer.getvalue()
-
