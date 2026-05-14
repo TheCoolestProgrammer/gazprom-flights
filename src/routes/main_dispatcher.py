@@ -21,7 +21,7 @@ from sqlalchemy.orm import aliased
 from src.models.airport import Airport
 from src.models.pilot import Pilot
 from src.models.aircraft_types import AircraftType
-from src.crud.flight import create_flights_bulk
+from src.crud.flight import create_flights_bulk, get_or_create_aircraft_type
 from src.crud.excel_generator import generate_both_excel_files
 from src.database import SessionDep
 from src.dependencies import get_current_user, RoleChecker
@@ -455,8 +455,9 @@ async def upload_flights_docx(
         # Подготовка данных для сохранения
         flights_to_create = []
         for flight_data in parsed_data["flights"]:
+            aircraft_type_id = get_or_create_aircraft_type(db, flight_data["aircraft_type"])
             flight_create = FlightCreate(
-                aircraft_type=flight_data["aircraft_type"],
+                aircraft_type=aircraft_type_id,
                 flight_number=flight_data["flight_number"],
                 departure_date=parsed_data["departure_date"],
                 departure_time=flight_data["departure_time"],
@@ -472,7 +473,7 @@ async def upload_flights_docx(
         flights_response = [
             FlightResponse(
                 id=flight.id,
-                aircraft_type=flight.aircraft_type,
+                aircraft_type=(flight.aircraft_type_rel.name if flight.aircraft_type_rel else str(flight.aircraft_type)),
                 flight_number=flight.flight_number,
                 departure_date=flight.departure_date,
                 departure_time=flight.departure_time,

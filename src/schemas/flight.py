@@ -4,7 +4,7 @@ from datetime import date, time
 from typing import Optional, List
 
 class FlightCreate(BaseModel):
-    aircraft_type: str
+    aircraft_type: int
     flight_number: int
     departure_date: date
     departure_time: time

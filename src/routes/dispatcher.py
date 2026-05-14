@@ -413,8 +413,10 @@ async def dashboard(
     #     query = query.filter(Passenger.department_director_status == director_status)
 
     # if dispatcher_status:
-    query = query.filter(Passenger.main_dispatcher_status == RequestStatus.CONFIRMED)
-
+    # query = query.filter(Passenger.main_dispatcher_status == RequestStatus.CONFIRMED)
+    query = query.filter(
+        Passenger.department_director_status == RequestStatus.CONFIRMED
+    )
     # Сортируем по дате заявки (сначала новые)
     requests = query.order_by(Passenger.request_date.desc()).all()
 
@@ -691,7 +693,7 @@ async def edit_request(
     birthdate: str = Form(...),
     gender: Gender = Form(...),
     trip_purpose: TripPurpose = Form(...),
-    planning_date: str = Form(...),
+    # planning_date: str = Form(...),
     flight_to: int = Form(...),
     cargo_weight: float = Form(None),
     gtu_relation: GTURelation = Form(...),
@@ -710,7 +712,7 @@ async def edit_request(
     passenger.trip_purpose = trip_purpose
     passenger.status = RequestStatus.PENDING
     passenger.created_by = user.id
-    passenger.planning_date = planning_date
+    # passenger.planning_date = planning_date
     passenger.flight_to_id = flight_to
     passenger.cargo_weight = cargo_weight
     passenger.gtu_relation = gtu_relation

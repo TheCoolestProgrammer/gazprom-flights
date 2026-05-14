@@ -8,9 +8,7 @@
             <a href="/dispatcher/done" class="btn btn-primary">выполненные заявки</a>
             <a href="/dispatcher/cargo" class="btn btn-primary">заявки на грузы</a>
             <button type="submit" form="status-form" class="btn btn-primary">Изменить статус выбранных</button>
-            <button type="button" 
-                    onclick="openCreateModal()" 
-                    class="btn btn-success">
+            <button type="button" onclick="openCreateModal()" class="btn btn-success">
                 ✈️ Создать новый рейс
             </button>
             <a href="/dispatcher/flights" class="btn btn-primary">рейсы</a>
@@ -22,29 +20,30 @@
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
             <div>
                 <label style="font-weight: bold;">Желаемая дата:</label><br>
-                <input type="date" name="planning_date" value="{{ filters.planning_date or '' }}" style="width: 100%; padding: 5px;">
+                <input type="date" name="planning_date" value="{{ filters.planning_date or '' }}"
+                    style="width: 100%; padding: 5px;">
             </div>
-            
+
             <div>
                 <label style="font-weight: bold;">Откуда:</label><br>
                 <select name="flight_from" style="width: 100%; padding: 5px;">
                     <option value="">Все</option>
                     {% for city in unique_cities_from %}
-                        <option value="{{ city }}" {% if filters.flight_from == city %}selected{% endif %}>{{ city }}</option>
+                    <option value="{{ city }}" {% if filters.flight_from==city %}selected{% endif %}>{{ city }}</option>
                     {% endfor %}
                 </select>
             </div>
-            
+
             <div>
                 <label style="font-weight: bold;">Куда:</label><br>
                 <select name="flight_to" style="width: 100%; padding: 5px;">
                     <option value="">Все</option>
                     {% for city in unique_cities_to %}
-                        <option value="{{ city }}" {% if filters.flight_to == city %}selected{% endif %}>{{ city }}</option>
+                    <option value="{{ city }}" {% if filters.flight_to==city %}selected{% endif %}>{{ city }}</option>
                     {% endfor %}
                 </select>
             </div>
-            
+
             <!-- <div>
                 <label style="font-weight: bold;">Статус директора:</label><br>
                 <select name="director_status" style="width: 100%; padding: 5px;">
@@ -64,7 +63,7 @@
                     {% endfor %}
                 </select>
             </div> -->
-            
+
             <div class="btn-group">
                 <button type="submit" class="btn btn-primary btn-icon">Применить</button>
                 <a href="?" class="btn btn-secondary btn-icon">Сбросить</a>
@@ -78,13 +77,15 @@
             <label style="font-weight: bold;">Назначить на рейс:</label>
             <select name="flight" style="margin-left: 10px; padding: 5px;">
                 {% for flight in flights %}
-                    <option value="{{ flight.id }}">{{ flight.aircraft_type }}-{{ flight.flight_number }}-{{ flight.route }}</option>
+                <option value="{{ flight.id }}">{{ flight.aircraft_type }}-{{ flight.flight_number }}-{{ flight.route }}
+                </option>
                 {% endfor %}
             </select>
         </div>
 
         <div style="margin-bottom: 15px;">
-            <input type="checkbox" id="select-all" onchange="toggleSelectAll()"> <label for="select-all">Выбрать все</label>
+            <input type="checkbox" id="select-all" onchange="toggleSelectAll()"> <label for="select-all">Выбрать
+                все</label>
         </div>
 
         <div class="requests-list">
@@ -112,7 +113,7 @@
                     <strong>Вес багажа:</strong> {{ req.cargo_weight }}
                 </div>
                 <div class="field">
-                    <strong>Филиал:</strong> {{ req.users.departments.name }}
+                    <strong>Филиал:</strong> {{ req.departments.name}}
                 </div>
                 <div class="field">
                     <strong>Откуда:</strong> {{ req.flight_from.name if req.flight_from else '-' }}
@@ -126,17 +127,16 @@
                 <div class="field">
                     <strong>Примечания:</strong>
                     {% if req.notes %}
-                        <div class="notes-preview"
-                            onclick="openNotesModal(`{{ req.notes | replace('`', '\\`') | replace('\n', '<br>') }}`)">
-                            {{ req.notes[:40] }}{% if req.notes|length > 40 %}...{% endif %}
-                        </div>
+                    <div class="notes-preview"
+                        onclick="openNotesModal(`{{ req.notes | replace('`', '\\`') | replace('\n', '<br>') }}`)">
+                        {{ req.notes[:40] }}{% if req.notes|length > 40 %}...{% endif %}
+                    </div>
                     {% else %}
-                        —
+                    —
                     {% endif %}
                 </div>
                 <div class="actions">
-                    <button type="button" 
-                        class="btn btn-info btn-icon" 
+                    <button type="button" class="btn btn-info btn-icon"
                         onclick="window.location.href='edit/{{ req.id }}'">
                         Редактировать
                     </button>
@@ -150,61 +150,72 @@
 </div>
 
 <!-- Модальное окно для создания рейса -->
-<div id="createModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
-    <div style="background-color: white; margin: 5% auto; padding: 25px; border-radius: 8px; width: 500px; max-width: 90%; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+<div id="createModal"
+    style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+    <div
+        style="background-color: white; margin: 5% auto; padding: 25px; border-radius: 8px; width: 500px; max-width: 90%; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3 style="margin: 0;">Создание нового рейса</h3>
-            <button onclick="closeCreateModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            <button onclick="closeCreateModal()"
+                style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
         </div>
-        
+
         <form id="createFlightForm">
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Дата вылета:</label>
-                <input type="date" id="departure_date" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="date" id="departure_date" required
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
-            
+
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Тип воздушного судна:</label>
                 <!-- <input type="text" id="aircraft_type" placeholder="Ми-8амт" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"> -->
-                <select id="aircraft_type" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <select id="aircraft_type" required
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                     <option value="">-- Выберите тип ВС --</option>
                     {% for ac in aircraft_types %}
                     <option value="{{ ac.id }}">{{ ac.name }}</option>
                     {% endfor %}
                 </select>
             </div>
-            
+
             <div style="margin-bottom: 25px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Бортовой номер:</label>
-                <input type="number" id="flight_number" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="number" id="flight_number" required
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
-            
+
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">ГЗП:</label>
-                <input type="text" id="gzp" placeholder="9817" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="text" id="gzp" placeholder="9817" required
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
-            
+
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Время вылета:</label>
-                <input type="time" id="departure_time" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="time" id="departure_time" required
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
-            
+
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Количество кресел:</label>
-                <input type="number" id="place_number" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="number" id="place_number" required
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
-            
+
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Маршрут (через дефис):</label>
-                <input type="text" id="route" placeholder="СОЙ-ПЭК-ХЛМ-СОЙ-пасс" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="text" id="route" placeholder="СОЙ-ПЭК-ХЛМ-СОЙ-пасс" required
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                 <small>Формат: точка1-точка2-...-тип_полёта (пасс, груз, пасс+груз)</small>
             </div>
 
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">примечания</label>
-                <input type="text" id="notes" placeholder="примечания" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                <input type="text" id="notes" placeholder="примечания" required
+                    style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>
-            
+
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold;">Пилот (КВС):</label>
                 <select id="pilot_id" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
@@ -214,13 +225,16 @@
                     {% endfor %}
                 </select>
             </div>
-            
+
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" onclick="closeCreateModal()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Отмена</button>
-                <button type="submit" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Создать и сгенерировать DOCX</button>
+                <button type="button" onclick="closeCreateModal()"
+                    style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Отмена</button>
+                <button type="submit"
+                    style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Создать
+                    и сгенерировать DOCX</button>
             </div>
         </form>
-        
+
         <div id="createResult" style="margin-top: 20px; display: none;"></div>
     </div>
 </div>
@@ -236,127 +250,133 @@
     </div>
 </div>
 <script>
-// Чекбокс "Выбрать все"
-function toggleSelectAll() {
-    const selectAllCheckbox = document.getElementById('select-all');
-    const checkboxes = document.getElementsByName('selected_ids');
-    for (let checkbox of checkboxes) {
-        checkbox.checked = selectAllCheckbox.checked;
+    // Чекбокс "Выбрать все"
+    function toggleSelectAll() {
+        const selectAllCheckbox = document.getElementById('select-all');
+        const checkboxes = document.getElementsByName('selected_ids');
+        for (let checkbox of checkboxes) {
+            checkbox.checked = selectAllCheckbox.checked;
+        }
     }
-}
 
-// Функции для модального окна
-function openCreateModal() {
-    document.getElementById('createModal').style.display = 'block';
-    document.getElementById('createFlightForm').reset();
-    document.getElementById('createResult').style.display = 'none';
-}
-
-function closeCreateModal() {
-    document.getElementById('createModal').style.display = 'none';
-}
-
-// Закрытие по клику вне окна
-window.onclick = function(event) {
-    const modal = document.getElementById('createModal');
-    if (event.target === modal) {
-        closeCreateModal();
+    // Функции для модального окна
+    function openCreateModal() {
+        document.getElementById('createModal').style.display = 'block';
+        document.getElementById('createFlightForm').reset();
+        document.getElementById('createResult').style.display = 'none';
     }
-    const notesModal = document.getElementById('notesModal');
 
-    if (event.target === notesModal) {
-        closeNotesModal();
+    function closeCreateModal() {
+        document.getElementById('createModal').style.display = 'none';
     }
-}
-// Открытие модального окна примечаний
-function openNotesModal(text) {
-    document.getElementById('notesModalBody').innerHTML = text;
-    document.getElementById('notesModal').style.display = 'block';
-}
 
-// Закрытие модального окна примечаний
-function closeNotesModal() {
-    document.getElementById('notesModal').style.display = 'none';
-}
-// Обработка отправки формы
-document.getElementById('createFlightForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const pilotIdValue = document.getElementById('pilot_id').value;
-    const formData = {
-        departure_date: document.getElementById('departure_date').value,
-        aircraft_type: document.getElementById('aircraft_type').value,
-        flight_number: parseInt(document.getElementById('flight_number').value),
-        gzp: document.getElementById('gzp').value,
-        departure_time: document.getElementById('departure_time').value,
-        place_number: parseInt(document.getElementById('place_number').value),
-        route: document.getElementById('route').value,
-        pilot_id: pilotIdValue ? parseInt(pilotIdValue) : null,
-        notes: document.getElementById('notes').value
-    };
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const resultDiv = document.getElementById('createResult');
-    
-    submitBtn.disabled = true;
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = '<div style="background: #cce5ff; padding: 10px; border-radius: 4px;">⏳ Создание рейса и генерация DOCX...</div>';
-    
-    try {
-        const response = await fetch('/main_dispatcher/create-from-form', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(formData)
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            resultDiv.innerHTML = `
+    // Закрытие по клику вне окна
+    window.onclick = function (event) {
+        const modal = document.getElementById('createModal');
+        if (event.target === modal) {
+            closeCreateModal();
+        }
+        const notesModal = document.getElementById('notesModal');
+
+        if (event.target === notesModal) {
+            closeNotesModal();
+        }
+    }
+    // Открытие модального окна примечаний
+    function openNotesModal(text) {
+        document.getElementById('notesModalBody').innerHTML = text;
+        document.getElementById('notesModal').style.display = 'block';
+    }
+
+    // Закрытие модального окна примечаний
+    function closeNotesModal() {
+        document.getElementById('notesModal').style.display = 'none';
+    }
+    // Обработка отправки формы
+    document.getElementById('createFlightForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const pilotIdValue = document.getElementById('pilot_id').value;
+        const formData = {
+            departure_date: document.getElementById('departure_date').value,
+            aircraft_type: document.getElementById('aircraft_type').value,
+            flight_number: parseInt(document.getElementById('flight_number').value),
+            gzp: document.getElementById('gzp').value,
+            departure_time: document.getElementById('departure_time').value,
+            place_number: parseInt(document.getElementById('place_number').value),
+            route: document.getElementById('route').value,
+            pilot_id: pilotIdValue ? parseInt(pilotIdValue) : null,
+            notes: document.getElementById('notes').value
+        };
+
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const resultDiv = document.getElementById('createResult');
+
+        submitBtn.disabled = true;
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = '<div style="background: #cce5ff; padding: 10px; border-radius: 4px;">⏳ Создание рейса и генерация DOCX...</div>';
+
+        try {
+            const response = await fetch('/main_dispatcher/create-from-form', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                resultDiv.innerHTML = `
                 <div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 4px;">
                     ✅ Рейс успешно создан!<br>
                     <a href="/main_dispatcher/download/${data.flight_id}" style="color: #155724; font-weight: bold;">📄 Скачать DOCX-заявку</a>
                 </div>
             `;
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
-        } else {
-            const error = await response.json();
-            throw new Error(error.detail || 'Ошибка при создании');
-        }
-    } catch (error) {
-        console.error('Ошибка:', error);
-        resultDiv.innerHTML = `
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                const error = await response.json();
+                throw new Error(error.detail || 'Ошибка при создании');
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            resultDiv.innerHTML = `
             <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px;">
                 ❌ Ошибка: ${error.message}
             </div>
         `;
-    } finally {
-        submitBtn.disabled = false;
-    }
-});
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
 
-// Инициализация при загрузке страницы
-document.addEventListener('DOMContentLoaded', function() {
-    setupCheckboxListeners();
-    updateSelectedCount();
-});
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function () {
+        setupCheckboxListeners();
+        updateSelectedCount();
+    });
 
 </script>
 
 <style>
-    .status-approved, .status-confirmed {
+    .status-approved,
+    .status-confirmed {
         color: green;
         font-weight: bold;
     }
-    .status-pending, .status-waiting {
+
+    .status-pending,
+    .status-waiting {
         color: orange;
         font-weight: bold;
     }
-    .status-rejected, .status-cancelled {
+
+    .status-rejected,
+    .status-cancelled {
         color: red;
         font-weight: bold;
     }
+
     .btn-submit {
         background-color: #28a745;
         color: white;
@@ -365,19 +385,22 @@ document.addEventListener('DOMContentLoaded', function() {
         border-radius: 4px;
         cursor: pointer;
     }
+
     .btn-submit:hover {
         background-color: #218838;
     }
+
     button[type="submit"]:hover {
         opacity: 0.9;
     }
+
     .notes-preview {
-    max-width: 220px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-    color: #007bff;
+        max-width: 220px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+        color: #007bff;
     }
 
     .notes-preview:hover {
@@ -392,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function() {
         top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0, 0, 0, 0.5);
     }
 
     .modal-content {
