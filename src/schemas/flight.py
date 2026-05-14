@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from datetime import date, time
 from typing import Optional, List
 
+
 class FlightCreate(BaseModel):
     aircraft_type: int
     flight_number: int
@@ -11,6 +12,7 @@ class FlightCreate(BaseModel):
     place_number: int
     route: str
     pilot_id: Optional[int] = None
+
 
 class FlightResponse(BaseModel):
     id: int
@@ -21,9 +23,10 @@ class FlightResponse(BaseModel):
     place_number: int
     route: str
     pilot_id: Optional[int] = None
-    
+
     class Config:
         from_attributes = True
+
 
 class FlightParseResponse(BaseModel):
     status: str
@@ -42,8 +45,10 @@ class FlightCreateForm(BaseModel):
     route: str = Field(..., alias="route")
     pilot_id: Optional[int] = Field(None, alias="pilot_id")
     notes: Optional[str] = Field(None, alias="notes")
+
     class Config:
         populate_by_name = True  # позво
+
 
 class SelectedFlightsRequest(BaseModel):
     flight_ids: List[int]

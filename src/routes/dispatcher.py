@@ -38,7 +38,7 @@ async def cargo_edit_form(
     user: User = Depends(RoleChecker(Role.DISPATCHER_DIRECTOR)),
 ):
     cargo = session.get(Cargo, cargo_id)
-    if not cargo or cargo.department_id != user.department_id:
+    if not cargo:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Груз не найден"
         )
@@ -72,7 +72,7 @@ async def done_cargo_dashboard(
 
     query = query.filter(
         Cargo.department_director_status == RequestStatus.CONFIRMED,
-        Cargo.main_dispatcher_status == RequestStatus.CONFIRMED,
+        # Cargo.main_dispatcher_status == RequestStatus.CONFIRMED,
         Cargo.done_status == RequestStatus.CONFIRMED,
     )
 
@@ -254,7 +254,7 @@ async def cargo_dashboard(
 
     query = query.filter(
         Cargo.department_director_status == RequestStatus.CONFIRMED,
-        Cargo.main_dispatcher_status == RequestStatus.CONFIRMED,
+        # Cargo.main_dispatcher_status == RequestStatus.CONFIRMED,
         Cargo.done_status != RequestStatus.CONFIRMED,
     )
 

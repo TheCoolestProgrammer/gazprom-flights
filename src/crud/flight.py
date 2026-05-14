@@ -5,6 +5,7 @@ from src.models.aircraft_types import AircraftType
 from src.schemas.flight import FlightCreate
 from datetime import date
 
+
 def get_or_create_aircraft_type(db: Session, aircraft_type_name: str) -> int:
     normalized_name = aircraft_type_name.strip()
     if not normalized_name:
@@ -32,12 +33,13 @@ def create_flight(db: Session, flight: FlightCreate):
         departure_time=flight.departure_time,
         place_number=flight.place_number,
         route=flight.route,
-        pilot_id=flight.pilot_id
+        pilot_id=flight.pilot_id,
     )
     db.add(db_flight)
     db.commit()
     db.refresh(db_flight)
     return db_flight
+
 
 def create_flights_bulk(db: Session, flights: list[FlightCreate]):
     db_flights = []
@@ -49,7 +51,7 @@ def create_flights_bulk(db: Session, flights: list[FlightCreate]):
             departure_time=flight.departure_time,
             place_number=flight.place_number,
             route=flight.route,
-            pilot_id=flight.pilot_id
+            pilot_id=flight.pilot_id,
         )
         db.add(db_flight)
         db_flights.append(db_flight)
@@ -57,6 +59,7 @@ def create_flights_bulk(db: Session, flights: list[FlightCreate]):
     for db_flight in db_flights:
         db.refresh(db_flight)
     return db_flights
+
 
 def get_flights_by_date(db: Session, departure_date: date):
     return db.query(Flight).filter(Flight.departure_date == departure_date).all()
